@@ -1,36 +1,24 @@
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
+var shapes = [];
+var openPoints = [];
+
+var gravity = {
+  x : 0,
+  y : 0.01
+};
+
 document.addEventListener("click", mouseClicked);
 document.addEventListener("keypress", keyPressed);
 
 ctx.strokeStyle = 'black';
 ctx.lineWidth = 2;
 
-var shapes = [];
-var openPoints = [];
+var bottomWall = new Polygon(150, 290, [[-150, -10], [-150, 10], [150, 10], [150, -10]], true)
+shapes.push(bottomWall);
 
 main();
-
-class Polygon {
-  //points are relative to the center of the shape, so that moving it is simpler
-  constructor(x, y, points) {
-    this.x = x;
-    this.y = y;
-    this.points = points;
-  }
-
-  draw() {
-    ctx.beginPath();
-    ctx.moveTo(this.x + this.points[0][0], this.y + this.points[0][1]);
-    for (let i = 1; i < this.points.length; i++) {
-      ctx.lineTo(this.x + this.points[i][0], this.y + this.points[i][1]);
-    }
-    ctx.closePath();
-    ctx.stroke();
-  }
-
-}
 
 function main() {
   update();
@@ -53,7 +41,13 @@ function draw() {
 }
 
 function update() {
+  for (let i in shapes) {
+    shapes[i].update();
+  }
 
+  if (shapes.length > 1) {
+    shapes[1].checkColliding(bottomWall);
+  }
 }
 
 function mouseClicked(e) {

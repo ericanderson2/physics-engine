@@ -1,35 +1,90 @@
+class Vector {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+
+  normalized() {
+    let x = this.x;
+    let y = this.y;
+
+    let magnitude = this.magnitude()
+    if (magnitude > 0) {
+      x /= magnitude;
+      y /= magnitude;
+    }
+    return new Vector(x, y);
+  }
+
+  magnitude() {
+    return Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
+  }
+
+  add(a, b) {
+      if (b == null) {
+        this.x += a.x;
+        this.y += a.y;
+        return this;
+      } else {
+        return new Vector(a.x + b.x, a.y + b.y);
+      }
+  }
+
+  sub(a, b) {
+      if (b == null) {
+        this.x -= a.x;
+        this.y -= a.y;
+        return this;
+      } else {
+        return new Vector(a.x - b.x, a.y - b.y);
+      }
+  }
+
+  static dot(a, b) {
+    return a.x * b.x + a.y * b.y;
+  }
+
+
+}
+
+
 class Polygon {
   //points are relative to the center of the shape, so that moving it is simpler
   constructor(x, y, points, immovable = false) {
-    this.x = x;
-    this.y = y;
-    this.dx = 0;
-    this.dy = 0;
+    this.position = new Vector(x, y);
+    this.velocity = new Vector(0, 0);
 
     this.points = points;
     this.immovable = immovable;
+
+    this.colliding = false
   }
 
   draw() {
+    if (this.colliding) {
+      ctx.strokeStyle = "red";
+    } else {
+      ctx.strokeStyle = "black";
+    }
+
     ctx.beginPath();
-    ctx.moveTo(this.x + this.points[0][0], this.y + this.points[0][1]);
+    ctx.moveTo(this.position.x + this.points[0].x, this.position.y + this.points[0].y);
     for (let i = 1; i < this.points.length; i++) {
-      ctx.lineTo(this.x + this.points[i][0], this.y + this.points[i][1]);
+      ctx.lineTo(this.position.x + this.points[i].x, this.position.y + this.points[i].y);
     }
     ctx.closePath();
     ctx.stroke();
   }
 
   update() {
+    this.colliding = false;
+
     if (this.immovable) {
       return
     }
 
-    this.dx += gravity.x;
-    this.dy += gravity.y;
-
-    this.x += this.dx;
-    this.y += this.dy;
+    //this.velocity.add(gravity);
+    this.position.add(this.velocity);
   }
 
   checkColliding(p) {
@@ -46,28 +101,26 @@ class Polygon {
         //console.log("v1:" + vertices[i] + "\nv2:" + vertices[i + 1] + "\np:" + perpendicular);
       }
 
-
-
-      let max = perpendicular[0] * vertices[0][0] + perpendicular[1] * vertices[0][1];
+      let max = perpendicular.x * vertices[0].x + perpendicular.y * vertices[0].y;
       let min = max;
       for (let j = 1; j < vertices.length; j++) {
-        let dot = perpendicular[0] * vertices[j][0] + perpendicular[1] * vertices[j][1];
+        let dot = perpendicular.x * vertices[j].x + perpendicular.y * vertices[j].y;
         max = Math.max(max, dot);
         min = Math.min(min, dot);
       }
 
-      let pMax = perpendicular[0] * pVertices[0][0] + perpendicular[1] * pVertices[0][1];
+      let pMax = Vector.dot(perpendicular, pVertices[0]);
       let pMin = pMax;
       for (let j = 1; j < pVertices.length; j++) {
-        let dot = perpendicular[0] * pVertices[j][0] + perpendicular[1] * pVertices[j][1];
+        let dot = Vector.dot(perpendicular, pVertices[j]);
         pMax = Math.max(pMax, dot);
         pMin = Math.min(pMin, dot);
       }
 
-      if (!((pMax < max && pMax > min) || (pMin < max && pMin > min))) {
-        console.log(pMax);
+      if (Math.min(max, pMax) - Math.max(min, pMin) < 0) {
         return;
       }
+
     }
 
     for (let i = 0; i < pVertices.length; i++) {
@@ -78,18 +131,18 @@ class Polygon {
         perpendicular = p.getPerpendicular(pVertices[i], pVertices[0]);
       }
 
-      let max = perpendicular[0] * vertices[0][0] + perpendicular[1] * vertices[0][1];
+      let max = perpendicular.x * vertices[0].x + perpendicular.y * vertices[0].y;
       let min = max;
       for (let j = 1; j < vertices.length; j++) {
-        let dot = perpendicular[0] * vertices[j][0] + perpendicular[1] * vertices[j][1];
+        let dot = perpendicular.x * vertices[j].x + perpendicular.y * vertices[j].y;
         max = Math.max(max, dot);
         min = Math.min(min, dot);
       }
 
-      let pMax = perpendicular[0] * pVertices[0][0] + perpendicular[1] * pVertices[0][1];
+      let pMax = perpendicular.x * pVertices[0].x + perpendicular.y * pVertices[0].y;
       let pMin = pMax;
       for (let j = 1; j < pVertices.length; j++) {
-        let dot = perpendicular[0] * pVertices[j][0] + perpendicular[1] * pVertices[j][1];
+        let dot = perpendicular.x * pVertices[j].x + perpendicular.y * pVertices[j].y;
         pMax = Math.max(pMax, dot);
         pMin = Math.min(pMin, dot);
       }
@@ -99,28 +152,21 @@ class Polygon {
       }
     }
 
-    console.log("colliding");
+    this.colliding = true;
 
   }
 
   getVertices() {
     let vertices = [];
     for (let i in this.points) {
-      vertices.push([this.points[i][0] + this.x, this.points[i][1] + this.y]);
+      vertices.push(new Vector(this.points[i].x + this.position.x, this.points[i].y + this.position.y));
     }
     return vertices;
   }
 
-  getPerpendicular(v2, v1) {
-    let perpendicular = [-(v1[1] - v2[1]), v1[0] - v2[0]];
-
-    let magnitude = Math.sqrt(Math.pow(perpendicular[0], 2) + Math.pow(perpendicular[1], 2));
-    if (magnitude != 0) {
-        perpendicular[0] *= 1 / magnitude;
-        perpendicular[1] *= 1 / magnitude;
-     }
-
-     return perpendicular;
+  getPerpendicular(a, b) {
+    let perpendicular = new Vector(-(b.y - a.y), b.x - a.x);
+    return perpendicular.normalized();
   }
 
 }

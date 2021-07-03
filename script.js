@@ -31,6 +31,7 @@ function draw() {
 
   //show the currently clicked on points
   for (let i in openPoints) {
+    ctx.strokeStyle = "black";
     ctx.beginPath();
     ctx.arc(openPoints[i].x, openPoints[i].y, 5, 0, Math.PI * 2);
     ctx.stroke();
@@ -42,13 +43,6 @@ function update() {
     shapes[i].update();
   }
 
-  for (let i in shapes) {
-    for (let j in shapes) {
-      if (i != j) {
-        shapes[i].checkColliding(shapes[j]);
-      }
-    }
-  }
 }
 
 function mouseClicked(e) {

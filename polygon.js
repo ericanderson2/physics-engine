@@ -80,80 +80,20 @@ class Polygon {
     this.colliding = false;
 
     if (this.immovable) {
-      return
+      return;
+    }
+
+    for (let i in shapes) {
+      if (shapes[i] == this) {
+        continue;
+      }
+      if (checkColliding(this, shapes[i])) {
+        this.colliding = true;
+      }
     }
 
     //this.velocity.add(gravity);
     this.position.add(this.velocity);
-  }
-
-  checkColliding(p) {
-    let vertices = this.getVertices();
-    let pVertices = p.getVertices();
-
-    for (let i = 0; i < vertices.length; i++) {
-      let perpendicular;
-      if (i == vertices.length - 1) {
-        perpendicular = this.getPerpendicular(vertices[i], vertices[0]);
-      //  console.log("v1:" + vertices[i] + "\nv2:" + vertices[0] + "\np:" + perpendicular);
-      } else {
-        perpendicular = this.getPerpendicular(vertices[i], vertices[i + 1]);
-        //console.log("v1:" + vertices[i] + "\nv2:" + vertices[i + 1] + "\np:" + perpendicular);
-      }
-
-      let max = perpendicular.x * vertices[0].x + perpendicular.y * vertices[0].y;
-      let min = max;
-      for (let j = 1; j < vertices.length; j++) {
-        let dot = perpendicular.x * vertices[j].x + perpendicular.y * vertices[j].y;
-        max = Math.max(max, dot);
-        min = Math.min(min, dot);
-      }
-
-      let pMax = Vector.dot(perpendicular, pVertices[0]);
-      let pMin = pMax;
-      for (let j = 1; j < pVertices.length; j++) {
-        let dot = Vector.dot(perpendicular, pVertices[j]);
-        pMax = Math.max(pMax, dot);
-        pMin = Math.min(pMin, dot);
-      }
-
-      if (Math.min(max, pMax) - Math.max(min, pMin) < 0) {
-        return;
-      }
-
-    }
-
-    for (let i = 0; i < pVertices.length; i++) {
-      let perpendicular;
-      if (i < pVertices.length - 1) {
-        perpendicular = p.getPerpendicular(pVertices[i], pVertices[i + 1]);
-      } else {
-        perpendicular = p.getPerpendicular(pVertices[i], pVertices[0]);
-      }
-
-      let max = perpendicular.x * vertices[0].x + perpendicular.y * vertices[0].y;
-      let min = max;
-      for (let j = 1; j < vertices.length; j++) {
-        let dot = perpendicular.x * vertices[j].x + perpendicular.y * vertices[j].y;
-        max = Math.max(max, dot);
-        min = Math.min(min, dot);
-      }
-
-      let pMax = perpendicular.x * pVertices[0].x + perpendicular.y * pVertices[0].y;
-      let pMin = pMax;
-      for (let j = 1; j < pVertices.length; j++) {
-        let dot = perpendicular.x * pVertices[j].x + perpendicular.y * pVertices[j].y;
-        pMax = Math.max(pMax, dot);
-        pMin = Math.min(pMin, dot);
-      }
-
-      if (!((pMax < max && pMax > min) || (pMin < max && pMin > min))) {
-        return;
-      }
-    }
-
-    this.colliding = true;
-
   }
 
   getVertices() {
@@ -169,4 +109,59 @@ class Polygon {
     return perpendicular.normalized();
   }
 
+}
+
+function checkColliding(a, b) {
+  let aVertices = a.getVertices();
+  let bVertices = b.getVertices();
+
+//check each perpendicular for polygon a
+  for (let i = 0; i < aVertices.length; i++) {
+    let perpendicular;
+    if (i == aVertices.length - 1) {
+      perpendicular = a.getPerpendicular(aVertices[i], aVertices[0]);
+    } else {
+      perpendicular = a.getPerpendicular(aVertices[i], aVertices[i + 1]);
+    }
+
+    let aProjection = projectVerticesOnAxis(perpendicular, aVertices);
+    let bProjection = projectVerticesOnAxis(perpendicular, bVertices);
+
+    if (Math.min(aProjection.max, bProjection.max) - Math.max(aProjection.min, bProjection.min) < 0) {
+      return false;
+    }
+  }
+
+//check each perpendicular for polygon b
+  for (let i = 0; i < bVertices.length; i++) {
+    let perpendicular;
+    if (i < bVertices.length - 1) {
+      perpendicular = b.getPerpendicular(bVertices[i], bVertices[i + 1]);
+    } else {
+      perpendicular = b.getPerpendicular(bVertices[i], bVertices[0]);
+    }
+
+    let aProjection = projectVerticesOnAxis(perpendicular, aVertices);
+    let bProjection = projectVerticesOnAxis(perpendicular, bVertices);
+
+    if (Math.min(aProjection.max, bProjection.max) - Math.max(aProjection.min, bProjection.min) < 0) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function projectVerticesOnAxis(perpendicular, vertices) {
+  let max = Vector.dot(perpendicular, vertices[0]);
+  let min = max;
+  for (let i = 1; i < vertices.length; i++) {
+    let dot = Vector.dot(perpendicular, vertices[i]);
+    max = Math.max(max, dot);
+    min = Math.min(min, dot);
+  }
+  return {
+      max: max,
+      min: min
+  };
 }

@@ -3,17 +3,20 @@ const ctx = canvas.getContext('2d');
 
 var shapes = [];
 var openPoints = [];
+var selectedShape = null;
 
-var gravity = new Vector(0, 0.01);
+var gravity = new Vector(0, 0);
 
-document.addEventListener("click", mouseClicked);
+document.addEventListener("mousedown", mouseDown);
+document.addEventListener("mouseup", mouseUp)
+document.addEventListener("mousemove", mouseMove);
 document.addEventListener("keypress", keyPressed);
 
-ctx.strokeStyle = 'black';
 ctx.lineWidth = 2;
 
-var bottomWall = new Polygon(150, 290, [new Vector(-150, -10), new Vector(-150, 10), new Vector(150, 10), new Vector(150, -10)], true);
-shapes.push(bottomWall);
+createPolygon(50, 50, 5);
+createPolygon(50, 100, 3);
+createPolygon(100, 100, 4);
 
 main();
 
@@ -45,14 +48,34 @@ function update() {
 
 }
 
-function mouseClicked(e) {
-  //normalize point for canvas location. appears off by ~5px? revisit this later
-  var rect = canvas.getBoundingClientRect()
-  var x = e.clientX - rect.left
-  var y = e.clientY - rect.top
+function mouseDown(e) {
+  let rect = canvas.getBoundingClientRect()
+  let mousePos = new Vector(e.clientX - rect.left, e.clientY - rect.top);
 
-  openPoints.push(new Vector(x, y));
+  for (let i in shapes) {
+    if (shapes[i].position.distanceTo(mousePos) < 8) {
+      shapes[i].selected = true;
+      selectedFlag = true;
+      selectedShape = shapes[i];
+      return;
+    }
+  }
+}
 
+function mouseUp(e) {
+  for (let i in shapes) {
+    shapes[i].selected = false;
+  }
+  selectedShape = null;
+}
+
+function mouseMove(e) {
+  let rect = canvas.getBoundingClientRect()
+  let mousePos = new Vector(e.clientX - rect.left, e.clientY - rect.top);
+
+  if (selectedShape != null) {
+    selectedShape.position = mousePos;
+  }
 }
 
 function keyPressed(e) {

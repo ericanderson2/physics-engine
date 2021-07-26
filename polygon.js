@@ -14,7 +14,7 @@ class Polygon {
     this.immovable = immovable;
 
     this.velocity = new Vector(0, 0);
-    this.rotVelocity = 0.01;
+    this.rotVelocity = 0.0;
 
     this.colliding = false;
     this.selected = false;
@@ -98,7 +98,7 @@ class Polygon {
 /* creates a polygon with the given number of sides. radius is set at 30.
    useful if you don't care about the exact location of the vertices */
 function createPolygon(x, y, sides) {
-  let radius = 30;
+  let radius = 50;
   let vertices = [];
 
   for (let i = 0; i < sides; i++) {
@@ -114,6 +114,9 @@ function checkColliding(a, b) {
   let aVertices = a.getVertices();
   let bVertices = b.getVertices();
 
+  let translationDistance = Infinity;
+  let translationDirection;
+  let translationObject;
 //check each perpendicular for polygon a
   for (let i = 0; i < aVertices.length; i++) {
     let perpendicular;
@@ -126,9 +129,32 @@ function checkColliding(a, b) {
     let aProjection = projectVerticesOnAxis(perpendicular, aVertices);
     let bProjection = projectVerticesOnAxis(perpendicular, bVertices);
 
-    if (Math.min(aProjection.max, bProjection.max) - Math.max(aProjection.min, bProjection.min) < 0) {
+    let overlap = Math.min(aProjection.max, bProjection.max) - Math.max(aProjection.min, bProjection.min);
+    if (overlap < 0) {
       return false;
     }
+
+    //conditional for shapes colliding but no vertices from one shape are inside the other
+    if ((aProjection.max > bProjection.max && aProjection.min < bProjection.min) || (aProjection.max < bProjection.max && aProjection.min > bProjection.min)) {
+      let min = Math.abs(aProjection.min - bProjection.min);
+      let max = Math.abs(aProjection.max - bProjection.max);
+      if (min < max) {
+        translationDistance += min;
+      } else {
+        translationDistance += max;
+        perpendicular.multiply(-1);
+      }
+    }
+
+    if (overlap < translationDistance) {
+      translationDistance = overlap;
+      translationDirection = perpendicular;
+      translationObject = b;
+      if (aProjection.max > bProjection.max) {
+        translationDirection = perpendicular.multiply(-1);
+      }
+    }
+
   }
 
 //check each perpendicular for polygon b
@@ -143,14 +169,39 @@ function checkColliding(a, b) {
     let aProjection = projectVerticesOnAxis(perpendicular, aVertices);
     let bProjection = projectVerticesOnAxis(perpendicular, bVertices);
 
-    if (Math.min(aProjection.max, bProjection.max) - Math.max(aProjection.min, bProjection.min) < 0) {
+    let overlap = Math.min(aProjection.max, bProjection.max) - Math.max(aProjection.min, bProjection.min)
+    if (overlap < 0) {
       return false;
+    }
+
+    if ((aProjection.max > bProjection.max && aProjection.min < bProjection.min) || (aProjection.max < bProjection.max && aProjection.min > bProjection.min)) {
+      let min = Math.abs(bProjection.min - aProjection.min);
+      let max = Math.abs(bProjection.max - aProjection.max);
+      if (min < max) {
+        translationDistance += min;
+      } else {
+        translationDistance += max;
+        translationDirection = perpendicular.multiply(-1);
+      }
+    }
+
+    if (overlap < translationDistance) {
+      translationDistance = overlap;
+      translationDirection = perpendicular;
+      translationObject = a;
+      if (bProjection.max > aProjection.max) {
+        translationDirection.multiply(-1);
+      }
     }
   }
 
+  let overlappingVertex = projectVerticesOnAxis(translationDirection, translationObject.getVertices()).overlappingVertex;
+  line(overlappingVertex.x, overlappingVertex.y, translationDirection.x * translationDistance + overlappingVertex.x, translationDirection.y * translationDistance + overlappingVertex.y);
+  translationObject.position.add(translationDirection.multiply(translationDistance));
   return true;
 }
 
+//helper functions for SAT collisions
 function getPerpendicular(a, b) {
   let perpendicular = new Vector(-(b.y - a.y), b.x - a.x);
   return perpendicular.normalized();
@@ -159,17 +210,23 @@ function getPerpendicular(a, b) {
 function projectVerticesOnAxis(perpendicular, vertices) {
   let max = Vector.dot(perpendicular, vertices[0]);
   let min = max;
+  let overlappingVertex = vertices[0];
   for (let i = 1; i < vertices.length; i++) {
     let dot = Vector.dot(perpendicular, vertices[i]);
     max = Math.max(max, dot);
     min = Math.min(min, dot);
+    if (dot == min) {
+      overlappingVertex = vertices[i];
+    }
   }
   return {
       max: max,
-      min: min
+      min: min,
+      overlappingVertex: overlappingVertex
   };
 }
 //End of the SAT functions
+
 
 //helper class to store any data point with an x and a y value
 class Vector {
@@ -206,6 +263,12 @@ class Vector {
       this.x -= a.x;
       this.y -= a.y;
       return this;
+  }
+
+  multiply(a) {
+    this.x *= a;
+    this.y *= a;
+    return this;
   }
 
   distanceTo(a) {

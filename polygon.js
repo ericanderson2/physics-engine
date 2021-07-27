@@ -8,16 +8,17 @@ class Polygon {
     colliding (Boolean) : set each frame in update(), used for draw()
     selected (Boolean) : whether the user has clicked on the shape, used for draw()
   */
-  constructor(x, y, points, immovable = false) {
+  constructor(x, y, points, mass = 5, immovable = false) {
     this.position = new Vector(x, y);
     this.points = points;
     this.immovable = immovable;
-
+    this.mass = mass;
     this.velocity = new Vector(0, 0);
     this.rotVelocity = 0.0;
 
     this.colliding = false;
     this.selected = false;
+
   }
 
   draw() {
@@ -67,6 +68,22 @@ class Polygon {
     }
 
     //update the location of points. apply gravity and rotation
+    if (this.velocity.x > 0) {
+      this.velocity.x -= FRICTION;
+      this.velocity.x = Math.max(0, this.velocity.x);
+    } else {
+      this.velocity.x += FRICTION;
+      this.velocity.x = Math.min(0, this.velocity.x);
+    }
+
+    if (this.velocity.y > 0) {
+      this.velocity.y -= FRICTION;
+      this.velocity.y = Math.max(0, this.velocity.y);
+    } else {
+      this.velocity.y += FRICTION;
+      this.velocity.y = Math.min(0, this.velocity.y);
+    }
+
     this.velocity.add(gravity);
     this.position.add(this.velocity);
 
@@ -151,7 +168,7 @@ function checkColliding(a, b) {
       translationDirection = perpendicular;
       translationObject = b;
       if (aProjection.max > bProjection.max) {
-        translationDirection = perpendicular.multiply(-1);
+        translationDirection.multiply(-1);
       }
     }
 
@@ -160,10 +177,10 @@ function checkColliding(a, b) {
 //check each perpendicular for polygon b
   for (let i = 0; i < bVertices.length; i++) {
     let perpendicular;
-    if (i < bVertices.length - 1) {
-      perpendicular = getPerpendicular(bVertices[i], bVertices[i + 1]);
-    } else {
+    if (i == bVertices.length - 1) {
       perpendicular = getPerpendicular(bVertices[i], bVertices[0]);
+    } else {
+      perpendicular = getPerpendicular(bVertices[i], bVertices[i + 1]);
     }
 
     let aProjection = projectVerticesOnAxis(perpendicular, aVertices);
@@ -181,7 +198,7 @@ function checkColliding(a, b) {
         translationDistance += min;
       } else {
         translationDistance += max;
-        translationDirection = perpendicular.multiply(-1);
+        translationDirection.multiply(-1);
       }
     }
 
@@ -196,8 +213,26 @@ function checkColliding(a, b) {
   }
 
   let overlappingVertex = projectVerticesOnAxis(translationDirection, translationObject.getVertices()).overlappingVertex;
-  line(overlappingVertex.x, overlappingVertex.y, translationDirection.x * translationDistance + overlappingVertex.x, translationDirection.y * translationDistance + overlappingVertex.y);
-  translationObject.position.add(translationDirection.multiply(translationDistance));
+  //line(overlappingVertex.x, overlappingVertex.y, translationDirection.x * translationDistance + overlappingVertex.x, translationDirection.y * translationDistance + overlappingVertex.y);
+
+  if (translationObject == b) {
+    translationDirection.multiply(-1);
+  }
+  let overlapVector = new Vector(translationDirection.x, translationDirection.y).multiply(translationDistance / (1 / a.mass + 1 / b.mass));
+  a.position.add(new Vector(overlapVector.x, overlapVector.y).multiply(1 / a.mass));
+  b.position.add(new Vector(overlapVector.x, overlapVector.y).multiply(-1 / b.mass));
+
+  let relativeVelocity = new Vector(a.velocity.x - b.velocity.x, a.velocity.y - b.velocity.y);
+  let separatingVelocity = Vector.dot(relativeVelocity, translationDirection);
+  let newSeparatingVelocity = -separatingVelocity * ELASTICITY;
+  let impulse = (newSeparatingVelocity - separatingVelocity) / (1 / a.mass + 1 / b.mass);
+  let impulseVector = new Vector(translationDirection.x, translationDirection.y).multiply(impulse);
+
+  console.log(translationDistance);
+  console.log(translationDirection);
+
+  a.velocity.add(new Vector(impulseVector.x, impulseVector.y).multiply(1 / a.mass));
+  b.velocity.add(new Vector(impulseVector.x, impulseVector.y).multiply(-1 / b.mass));
   return true;
 }
 

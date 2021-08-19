@@ -19,6 +19,12 @@ class Polygon {
     this.colliding = false;
     this.selected = false;
 
+    this.momentOfInertia = 0;
+    for (let i in points) {
+      this.momentOfInertia += Math.sqrt(points[i].distanceTo(this.position));
+    }
+    this.momentOfInertia *= this.mass;
+    //i do not think this is the right way to calculate moment of inertia
   }
 
   draw() {
@@ -53,10 +59,6 @@ class Polygon {
   update() {
     this.colliding = false;
 
-    if (this.immovable) {
-      return;
-    }
-
     //check for collisions with other polygons
     for (let i in shapes) {
       if (shapes[i] == this) {
@@ -67,6 +69,11 @@ class Polygon {
       }
     }
 
+    if (this.immovable) {
+      this.velocity = new Vector(0, 0);
+      this.rotVelocity = 0.0;
+      return;
+    }
     //update the location of points. apply gravity and rotation
     if (this.velocity.x > 0) {
       this.velocity.x -= FRICTION;
@@ -84,8 +91,8 @@ class Polygon {
       this.velocity.y = Math.min(0, this.velocity.y);
     }
 
-    this.velocity.add(gravity);
-    this.position.add(this.velocity);
+    this.velocity = this.velocity.add(gravity);
+    this.position = this.position.add(this.velocity);
 
     this.applyRotation();
   }
@@ -112,10 +119,9 @@ class Polygon {
   }
 }
 
-/* creates a polygon with the given number of sides. radius is set at 30.
+/* creates a polygon with the given number of sides.
    useful if you don't care about the exact location of the vertices */
-function createPolygon(x, y, sides) {
-  let radius = 50;
+function createPolygon(x, y, sides, radius = 50, mass = 5, immovable = false) {
   let vertices = [];
 
   for (let i = 0; i < sides; i++) {
@@ -123,7 +129,7 @@ function createPolygon(x, y, sides) {
     vertices.push(new Vector(radius * Math.cos(angle), radius * Math.sin(angle)));
   }
 
-  shapes.push(new Polygon(x, y, vertices));
+  shapes.push(new Polygon(x, y, vertices, mass, immovable));
 }
 
 //The following functions are used for the polygon collision calculations (separating axis theorem implementation)
@@ -159,7 +165,7 @@ function checkColliding(a, b) {
         translationDistance += min;
       } else {
         translationDistance += max;
-        perpendicular.multiply(-1);
+        perpendicular = perpendicular.multiply(-1);
       }
     }
 
@@ -168,7 +174,7 @@ function checkColliding(a, b) {
       translationDirection = perpendicular;
       translationObject = b;
       if (aProjection.max > bProjection.max) {
-        translationDirection.multiply(-1);
+        translationDirection = translationDirection.multiply(-1);
       }
     }
 
@@ -198,7 +204,7 @@ function checkColliding(a, b) {
         translationDistance += min;
       } else {
         translationDistance += max;
-        translationDirection.multiply(-1);
+        translationDirection = translationDirection.multiply(-1);
       }
     }
 
@@ -207,7 +213,7 @@ function checkColliding(a, b) {
       translationDirection = perpendicular;
       translationObject = a;
       if (bProjection.max > aProjection.max) {
-        translationDirection.multiply(-1);
+        translationDirection = translationDirection.multiply(-1);
       }
     }
   }
@@ -216,23 +222,30 @@ function checkColliding(a, b) {
   //line(overlappingVertex.x, overlappingVertex.y, translationDirection.x * translationDistance + overlappingVertex.x, translationDirection.y * translationDistance + overlappingVertex.y);
 
   if (translationObject == b) {
-    translationDirection.multiply(-1);
+    translationDirection = translationDirection.multiply(-1);
   }
-  let overlapVector = new Vector(translationDirection.x, translationDirection.y).multiply(translationDistance / (1 / a.mass + 1 / b.mass));
-  a.position.add(new Vector(overlapVector.x, overlapVector.y).multiply(1 / a.mass));
-  b.position.add(new Vector(overlapVector.x, overlapVector.y).multiply(-1 / b.mass));
+
+  if (a.immovable || b.immovable) {
+    let overlapVector = translationDirection.multiply(translationDistance / (1 / a.mass + 1 / b.mass));
+    if (a.immovable) {
+      b.position = b.position.add(overlapVector.multiply(-1 / (a.mass + b.mass)));
+    } else {
+      a.position = a.position.add(overlapVector.multiply(1 / (a.mass + b.mass)));
+    }
+  } else {
+    let overlapVector = new Vector(translationDirection.x, translationDirection.y).multiply(translationDistance / (1 / a.mass + 1 / b.mass));
+    a.position = a.position.add(overlapVector.multiply(1 / a.mass));
+    b.position = b.position.add(overlapVector.multiply(-1 / b.mass));
+  }
 
   let relativeVelocity = new Vector(a.velocity.x - b.velocity.x, a.velocity.y - b.velocity.y);
   let separatingVelocity = Vector.dot(relativeVelocity, translationDirection);
   let newSeparatingVelocity = -separatingVelocity * ELASTICITY;
   let impulse = (newSeparatingVelocity - separatingVelocity) / (1 / a.mass + 1 / b.mass);
-  let impulseVector = new Vector(translationDirection.x, translationDirection.y).multiply(impulse);
+  let impulseVector = translationDirection.multiply(impulse);
 
-  console.log(translationDistance);
-  console.log(translationDirection);
-
-  a.velocity.add(new Vector(impulseVector.x, impulseVector.y).multiply(1 / a.mass));
-  b.velocity.add(new Vector(impulseVector.x, impulseVector.y).multiply(-1 / b.mass));
+  a.velocity = a.velocity.add(impulseVector.multiply(1 / a.mass));
+  b.velocity = b.velocity.add(impulseVector.multiply(-1 / b.mass));
   return true;
 }
 
@@ -289,21 +302,15 @@ class Vector {
   }
 
   add(a) {
-      this.x += a.x;
-      this.y += a.y;
-      return this;
+      return new Vector(this.x + a.x, this.y + a.y);
   }
 
   sub(a) {
-      this.x -= a.x;
-      this.y -= a.y;
-      return this;
+      return new Vector(this.x - a.x, this.y - a.y);
   }
 
   multiply(a) {
-    this.x *= a;
-    this.y *= a;
-    return this;
+    return new Vector(this.x * a, this.y * a);
   }
 
   distanceTo(a) {
@@ -314,4 +321,7 @@ class Vector {
     return a.x * b.x + a.y * b.y;
   }
 
+  toString() {
+    return '(' + this.x + ', ' + this.y + ')';
+  }
 }

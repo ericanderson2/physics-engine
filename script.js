@@ -5,14 +5,15 @@ const FRICTION = 0.02;
 const MOVEMENT = 3;
 const ELASTICITY = 1;
 
+var heldKeys = [];
 var shapes = [];
 var openPoints = [];
 var selectedShape = null;
 
 var gravity = new Vector(0, 0);
-var lastMousePos;
 document.addEventListener("mousedown", mouseDown);
-document.addEventListener("keypress", keyPressed);
+document.addEventListener("keydown", keyDown);
+document.addEventListener("keyup", keyUp);
 
 ctx.lineWidth = 1;
 ctx.font = "16px Arial";
@@ -21,7 +22,7 @@ var lastTime = new Date().getTime();
 createPolygon(50, 50, 5);
 createPolygon(50, 500, 3);
 createPolygon(300, 100, 4);
-shapes.push(new Polygon(400, 200, [new Vector(-40, -20), new Vector(40, -20), new Vector(40, 20), new Vector(-40, 20)], 15, false));
+shapes.push(new Polygon(400, 200, [new Vector(-40, -20), new Vector(40, -20), new Vector(40, 20), new Vector(-40, 20)], 15, true));
 //shapes.push(new Polygon(400, 10, [new Vector(-400, -10), new Vector(400, -10), new Vector(400, 10), new Vector(-400, 10)], true));
 
 main();
@@ -60,10 +61,10 @@ function draw() {
 }
 
 function update() {
+  updateSelectedShape();
   for (let i in shapes) {
     shapes[i].update();
   }
-
 }
 
 function mouseDown(e) {
@@ -81,51 +82,17 @@ function mouseDown(e) {
   }
 }
 
-function keyPressed(e) {
-  if (selectedShape == null) {
-    return;
+function keyDown(e) {
+  if (heldKeys.indexOf(e.key) < 0) {
+    heldKeys.push(e.key);
   }
-  switch (e.key) {
-    case "w":
-      selectedShape.velocity.y = -MOVEMENT;
-      break;
-    case "a":
-      selectedShape.velocity.x = -MOVEMENT;
-      break;
-    case "s":
-      selectedShape.velocity.y = MOVEMENT;
-      break;
-    case "d":
-      selectedShape.velocity.x = MOVEMENT;
-      break;
-    default:
-  }
-  /*
-  if (openPoints.length < 3) {
-    return;
-  }
-  if (e.code != 'Enter') {
-    openPoints = [];
-    return;
-  }
+}
 
-  //take absolute points and make them relative to a center location
-  var cumulative = new Vector(0, 0);
-
-  for (let i in openPoints) {
-    cumulative.add(openPoints[i]);
+function keyUp(e) {
+  let i = heldKeys.indexOf(e.key);
+  if (i > -1) {
+    heldKeys.splice(i, 1);
   }
-  var center = new Vector(cumulative.x / openPoints.length, cumulative.y / openPoints.length);
-
-  for (let i in openPoints) {
-    openPoints[i].sub(center);
-  }
-
-  var shape = new Polygon(center.x, center.y, openPoints);
-  shapes.push(shape);
-
-  openPoints = [];
-  */
 }
 
 function line(x1, y1, x2, y2) {
@@ -134,4 +101,27 @@ function line(x1, y1, x2, y2) {
   ctx.lineTo(x2, y2);
   ctx.stroke();
   ctx.closePath();
+}
+
+function updateSelectedShape() {
+  if (selectedShape == null) {
+    return;
+  }
+  for (let i in heldKeys) {
+    switch (heldKeys[i]) {
+      case "w":
+        selectedShape.velocity.y = -MOVEMENT;
+        break;
+      case "a":
+        selectedShape.velocity.x = -MOVEMENT;
+        break;
+      case "s":
+        selectedShape.velocity.y = MOVEMENT;
+        break;
+      case "d":
+        selectedShape.velocity.x = MOVEMENT;
+        break;
+      default:
+    }
+  }
 }

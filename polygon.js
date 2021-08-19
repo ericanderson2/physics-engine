@@ -31,6 +31,8 @@ class Polygon {
     //drawing the edges
     if (this.colliding) {
       ctx.strokeStyle = "red";
+    } else if (this.immovable) {
+      ctx.strokeStyle = "navy";
     } else {
       ctx.strokeStyle = "black";
     }
@@ -60,12 +62,14 @@ class Polygon {
     this.colliding = false;
 
     //check for collisions with other polygons
-    for (let i in shapes) {
-      if (shapes[i] == this) {
-        continue;
-      }
-      if (checkColliding(this, shapes[i])) {
-        this.colliding = true;
+    if (!this.immovable) {
+      for (let i in shapes) {
+        if (shapes[i] == this) {
+          continue;
+        }
+        if (checkColliding(this, shapes[i])) {
+          this.colliding = true;
+        }
       }
     }
 
@@ -204,7 +208,7 @@ function checkColliding(a, b) {
         translationDistance += min;
       } else {
         translationDistance += max;
-        translationDirection = translationDirection.multiply(-1);
+        perpendicular = perpendicular.multiply(-1);
       }
     }
 
@@ -219,33 +223,41 @@ function checkColliding(a, b) {
   }
 
   let overlappingVertex = projectVerticesOnAxis(translationDirection, translationObject.getVertices()).overlappingVertex;
-  //line(overlappingVertex.x, overlappingVertex.y, translationDirection.x * translationDistance + overlappingVertex.x, translationDirection.y * translationDistance + overlappingVertex.y);
 
   if (translationObject == b) {
-    translationDirection = translationDirection.multiply(-1);
+    //may be the problem
+    //translationDirection = translationDirection.multiply(-1);
   }
+  line(overlappingVertex.x, overlappingVertex.y, translationDirection.x * translationDistance + overlappingVertex.x, translationDirection.y * translationDistance + overlappingVertex.y);
+  circle(overlappingVertex.x, overlappingVertex.y, 3);
+//for testing: don't resolve collisions
+  return;
 
-  if (a.immovable || b.immovable) {
+  if (!b.immovable) {
     let overlapVector = translationDirection.multiply(translationDistance / (1 / a.mass + 1 / b.mass));
-    if (a.immovable) {
-      b.position = b.position.add(overlapVector.multiply(-1 / (a.mass + b.mass)));
-    } else {
-      a.position = a.position.add(overlapVector.multiply(1 / (a.mass + b.mass)));
-    }
-  } else {
-    let overlapVector = new Vector(translationDirection.x, translationDirection.y).multiply(translationDistance / (1 / a.mass + 1 / b.mass));
     a.position = a.position.add(overlapVector.multiply(1 / a.mass));
     b.position = b.position.add(overlapVector.multiply(-1 / b.mass));
+
+    let relativeVelocity = new Vector(a.velocity.x - b.velocity.x, a.velocity.y - b.velocity.y);
+    let separatingVelocity = Vector.dot(relativeVelocity, translationDirection);
+    let newSeparatingVelocity = -separatingVelocity * ELASTICITY;
+    let impulse = (newSeparatingVelocity - separatingVelocity) / (1 / a.mass + 1 / b.mass);
+    let impulseVector = translationDirection.multiply(impulse);
+
+    a.velocity = a.velocity.add(impulseVector.multiply(1 / a.mass));
+    b.velocity = b.velocity.add(impulseVector.multiply(-1 / b.mass));
+  } else {
+    let overlapVector = translationDirection.multiply(translationDistance);
+    a.position = a.position.add(overlapVector);
+    console.log(overlapVector);
+    //need to figure out why overlapVector is too large sometimes
+
+    let separatingVelocity = Vector.dot(a.velocity, translationDirection);
+    let newSeparatingVelocity = -separatingVelocity * ELASTICITY;
+    let impulse = (newSeparatingVelocity - separatingVelocity) / (1 / a.mass);
+    let impulseVector = translationDirection.multiply(impulse);
+    a.velocity = a.velocity.add(impulseVector.multiply(1 / a.mass));
   }
-
-  let relativeVelocity = new Vector(a.velocity.x - b.velocity.x, a.velocity.y - b.velocity.y);
-  let separatingVelocity = Vector.dot(relativeVelocity, translationDirection);
-  let newSeparatingVelocity = -separatingVelocity * ELASTICITY;
-  let impulse = (newSeparatingVelocity - separatingVelocity) / (1 / a.mass + 1 / b.mass);
-  let impulseVector = translationDirection.multiply(impulse);
-
-  a.velocity = a.velocity.add(impulseVector.multiply(1 / a.mass));
-  b.velocity = b.velocity.add(impulseVector.multiply(-1 / b.mass));
   return true;
 }
 

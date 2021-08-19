@@ -2,7 +2,7 @@ const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
 const FRICTION = 0.02;
-const MOVEMENT = 3;
+const MOVEMENT = 1;
 const ELASTICITY = 1;
 
 var heldKeys = [];
@@ -19,11 +19,15 @@ ctx.lineWidth = 1;
 ctx.font = "16px Arial";
 
 var lastTime = new Date().getTime();
-createPolygon(50, 50, 5);
+//walls
+shapes.push(new Polygon(400, 10, [new Vector(-400, -10), new Vector(-400, 10), new Vector(400, 10), new Vector(400, -10)], 15, true));
+shapes.push(new Polygon(400, 590, [new Vector(-400, -10), new Vector(-400, 10), new Vector(400, 10), new Vector(400, -10)], 15, true));
+shapes.push(new Polygon(10, 300, [new Vector(-10, -300), new Vector(-10, 300), new Vector(10, 300), new Vector(10, -300)], 15, true));
+shapes.push(new Polygon(790, 300, [new Vector(-10, -300), new Vector(-10, 300), new Vector(10, 300), new Vector(10, -300)], 15, true));
+shapes.push(new Polygon(400, 300, [new Vector(-10, -100), new Vector(-10, 100), new Vector(10, 100), new Vector(10, -100)], 15));
+createPolygon(150, 70, 5);
 createPolygon(50, 500, 3);
 createPolygon(300, 100, 4);
-shapes.push(new Polygon(400, 200, [new Vector(-40, -20), new Vector(40, -20), new Vector(40, 20), new Vector(-40, 20)], 15, true));
-//shapes.push(new Polygon(400, 10, [new Vector(-400, -10), new Vector(400, -10), new Vector(400, 10), new Vector(-400, 10)], true));
 
 main();
 
@@ -103,6 +107,13 @@ function line(x1, y1, x2, y2) {
   ctx.closePath();
 }
 
+function circle(x, y, radius) {
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.closePath();
+}
+
 function updateSelectedShape() {
   if (selectedShape == null) {
     return;
@@ -121,6 +132,8 @@ function updateSelectedShape() {
       case "d":
         selectedShape.velocity.x = MOVEMENT;
         break;
+      case "r":
+        selectedShape.rotVelocity = 0.01;
       default:
     }
   }

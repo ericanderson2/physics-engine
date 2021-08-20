@@ -142,18 +142,30 @@ function checkColliding(a, b) {
   let aVertices = a.getVertices();
   let bVertices = b.getVertices();
 
+/*  if (bVertices.length > aVertices.length) {
+    let tempVertices = aVertices;
+    aVertices = bVertices;
+    bVertices = tempVertices;
+
+    let tempShape = a;
+    a = b;
+    b = tempShape;
+  } */
+
   vertices.push.apply(vertices, aVertices);
   vertices.push.apply(vertices, bVertices);
 
   let translationDistance = null;
-  let translationDirection = null;// = getPerpendicular(vertices[0], vertices[1]);
-  let translationObject = a;
+  let translationDirection;// = getPerpendicular(vertices[0], vertices[1]);
+  let translationObject;
 
   for (let i = 0; i < vertices.length; i++) {
     let perpendicular;
     if (i == aVertices.length - 1) {
+      //connect the last vertex in shape a with the first one
       perpendicular = getPerpendicular(vertices[i], vertices[0]);
     } else if (i == vertices.length - 1) {
+      //connect the last vertex in shape b with the first one
       perpendicular = getPerpendicular(vertices[i], vertices[aVertices.length]);
     } else {
       perpendicular = getPerpendicular(vertices[i], vertices[i + 1]);
@@ -162,12 +174,14 @@ function checkColliding(a, b) {
     let aProjection = projectVerticesOnAxis(perpendicular, aVertices);
     let bProjection = projectVerticesOnAxis(perpendicular, bVertices);
 
-    var overlap = Math.min(aProjection.max, bProjection.max) - Math.max(aProjection.min, bProjection.min);
+    let overlap = Math.min(aProjection.max, bProjection.max) - Math.max(aProjection.min, bProjection.min);
+
     if (overlap < 0) {
+      //separating axis can be drawn. no collision
       return false;
     }
 
-    //conditional for shapes colliding but no vertices from one shape are inside the other
+    //shapes colliding but no vertices from one shape are inside the other
     if ((aProjection.max > bProjection.max && aProjection.min < bProjection.min) || (aProjection.max < bProjection.max && aProjection.min > bProjection.min)) {
       let min = Math.abs(aProjection.min - bProjection.min);
       let max = Math.abs(aProjection.max - bProjection.max);
@@ -186,128 +200,31 @@ function checkColliding(a, b) {
       if (i < aVertices.length) {
         translationObject = b;
         if (aProjection.max > bProjection.max) {
-          translationDirection = translationDirection.multiply(-1);
+          translationDirection = perpendicular.multiply(-1);
         }
       } else {
         translationObject = a;
         if (aProjection.max < bProjection.max) {
-          translationDirection = translationDirection.multiply(-1);
+          translationDirection = perpendicular.multiply(-1);
         }
       }
     }
-
 
   }//end for loop
 
   let overlappingVertex = projectVerticesOnAxis(translationDirection, translationObject.getVertices()).overlappingVertex;
 
   if (translationObject == b) {
-    //may be the problem
-   //translationDirection = translationDirection.multiply(-1);
-  }
-
-  line(overlappingVertex.x, overlappingVertex.y, translationDirection.x * translationDistance + overlappingVertex.x, translationDirection.y * translationDistance + overlappingVertex.y);
-  circle(overlappingVertex.x, overlappingVertex.y, 3);
-  return true;
-}
-/*
-function checkColliding(a, b) {
-  let aVertices = a.getVertices();
-  let bVertices = b.getVertices();
-
-  let translationDistance = Infinity;
-  let translationDirection;
-  let translationObject;
-//check each perpendicular for polygon a
-  for (let i = 0; i < aVertices.length; i++) {
-    let perpendicular;
-    if (i == aVertices.length - 1) {
-      perpendicular = getPerpendicular(aVertices[i], aVertices[0]);
-    } else {
-      perpendicular = getPerpendicular(aVertices[i], aVertices[i + 1]);
-    }
-
-    let aProjection = projectVerticesOnAxis(perpendicular, aVertices);
-    let bProjection = projectVerticesOnAxis(perpendicular, bVertices);
-
-    let overlap = Math.min(aProjection.max, bProjection.max) - Math.max(aProjection.min, bProjection.min);
-    if (overlap < 0) {
-      return false;
-    }
-
-    //conditional for shapes colliding but no vertices from one shape are inside the other
-    if ((aProjection.max > bProjection.max && aProjection.min < bProjection.min) || (aProjection.max < bProjection.max && aProjection.min > bProjection.min)) {
-      let min = Math.abs(aProjection.min - bProjection.min);
-      let max = Math.abs(aProjection.max - bProjection.max);
-      if (min < max) {
-        translationDistance += min;
-      } else {
-        translationDistance += max;
-        perpendicular = perpendicular.multiply(-1);
-      }
-    }
-
-    if (overlap < translationDistance) {
-      translationDistance = overlap;
-      translationDirection = perpendicular;
-      translationObject = b;
-      if (aProjection.max > bProjection.max) {
-        translationDirection = translationDirection.multiply(-1);
-      }
-    }
-
-  }
-
-//check each perpendicular for polygon b
-  for (let i = 0; i < bVertices.length; i++) {
-    let perpendicular;
-    if (i == bVertices.length - 1) {
-      perpendicular = getPerpendicular(bVertices[i], bVertices[0]);
-    } else {
-      perpendicular = getPerpendicular(bVertices[i], bVertices[i + 1]);
-    }
-
-    let aProjection = projectVerticesOnAxis(perpendicular, aVertices);
-    let bProjection = projectVerticesOnAxis(perpendicular, bVertices);
-
-    let overlap = Math.min(aProjection.max, bProjection.max) - Math.max(aProjection.min, bProjection.min)
-    if (overlap < 0) {
-      return false;
-    }
-
-    if ((aProjection.max > bProjection.max && aProjection.min < bProjection.min) || (aProjection.max < bProjection.max && aProjection.min > bProjection.min)) {
-      let min = Math.abs(bProjection.min - aProjection.min);
-      let max = Math.abs(bProjection.max - aProjection.max);
-      if (min < max) {
-        translationDistance += min;
-      } else {
-        translationDistance += max;
-        perpendicular = perpendicular.multiply(-1);
-      }
-    }
-
-    if (overlap < translationDistance) {
-      translationDistance = overlap;
-      translationDirection = perpendicular;
-      translationObject = a;
-      if (bProjection.max > aProjection.max) {
-        translationDirection = translationDirection.multiply(-1);
-      }
-    }
-  }
-
-  let overlappingVertex = projectVerticesOnAxis(translationDirection, translationObject.getVertices()).overlappingVertex;
-
-  if (translationObject == b) {
-    //may be the problem
     translationDirection = translationDirection.multiply(-1);
   }
-  //overlapVector is not the correct size
+
   line(overlappingVertex.x, overlappingVertex.y, translationDirection.x * translationDistance + overlappingVertex.x, translationDirection.y * translationDistance + overlappingVertex.y);
   circle(overlappingVertex.x, overlappingVertex.y, 3);
-//for testing: don't resolve collisions
-  return true;
+  if (!DO_COLLISION_RESOLUTION) {
+    return true;
+}
 
+  //collision resolution
   if (!b.immovable) {
     let overlapVector = translationDirection.multiply(translationDistance / (1 / a.mass + 1 / b.mass));
     a.position = a.position.add(overlapVector.multiply(1 / a.mass));
@@ -333,17 +250,25 @@ function checkColliding(a, b) {
   }
   return true;
 }
-*/
+
+
+
+
+
 
 //helper functions for SAT collisions
+
+//returns a unit vector with a slope perpendicular to the side passed in via vertices
 function getPerpendicular(a, b) {
   let perpendicular = new Vector(-(b.y - a.y), b.x - a.x);
   return perpendicular.normalized();
 }
 
+//returns information about the projection of a shape's vertices onto a line
 function projectVerticesOnAxis(perpendicular, vertices) {
-  let max = Vector.dot(perpendicular, vertices[0]);
-  let min = max;
+  let min = Vector.dot(perpendicular, vertices[0]);
+  let max = min;
+  //the vertex that is found within another shape, from which the translation is calculated
   let overlappingVertex = vertices[0];
   for (let i = 1; i < vertices.length; i++) {
     let dot = Vector.dot(perpendicular, vertices[i]);
@@ -382,7 +307,6 @@ class Vector {
     return new Vector(x, y);
   }
 
-  //returns the magnitude (length) of this vector
   magnitude() {
     return Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
   }

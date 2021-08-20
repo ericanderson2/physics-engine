@@ -1,9 +1,10 @@
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
-const FRICTION = 0.02;
-const MOVEMENT = 1;
-const ELASTICITY = 1;
+const FRICTION = 0.00; //default: 0.02
+const MOVEMENT = 5.0;  //default: 3
+const ELASTICITY = 1.0; //default: 1
+const DO_COLLISION_RESOLUTION = true; //default: true
 
 var heldKeys = [];
 var shapes = [];
@@ -11,6 +12,7 @@ var openPoints = [];
 var selectedShape = null;
 
 var gravity = new Vector(0, 0);
+
 document.addEventListener("mousedown", mouseDown);
 document.addEventListener("keydown", keyDown);
 document.addEventListener("keyup", keyUp);
@@ -20,14 +22,18 @@ ctx.font = "16px Arial";
 
 var lastTime = new Date().getTime();
 //walls
-shapes.push(new Polygon(400, 10, [new Vector(-400, -10), new Vector(-400, 10), new Vector(400, 10), new Vector(400, -10)], 15, true));
-shapes.push(new Polygon(400, 590, [new Vector(-400, -10), new Vector(-400, 10), new Vector(400, 10), new Vector(400, -10)], 15, true));
-shapes.push(new Polygon(10, 300, [new Vector(-10, -300), new Vector(-10, 300), new Vector(10, 300), new Vector(10, -300)], 15, true));
-shapes.push(new Polygon(790, 300, [new Vector(-10, -300), new Vector(-10, 300), new Vector(10, 300), new Vector(10, -300)], 15, true));
-shapes.push(new Polygon(400, 300, [new Vector(-10, -100), new Vector(-10, 100), new Vector(10, 100), new Vector(10, -100)], 15));
-createPolygon(150, 70, 5);
+shapes.push(new Polygon(400, 10, [new Vector(-400, -50), new Vector(-400, 10), new Vector(400, 10), new Vector(400, -50)], 15, true));
+shapes.push(new Polygon(400, 590, [new Vector(-400, -10), new Vector(-400, 50), new Vector(400, 50), new Vector(400, -10)], 15, true));
+shapes.push(new Polygon(10, 300, [new Vector(-50, -300), new Vector(-50, 300), new Vector(10, 300), new Vector(10, -300)], 15, true));
+shapes.push(new Polygon(790, 300, [new Vector(-10, -300), new Vector(-10, 300), new Vector(50, 300), new Vector(50, -300)], 15, true));
+//shapes.push(new Polygon(200, 300, [new Vector(-10, -200), new Vector(-10, 200), new Vector(10, 200), new Vector(10, -200)], 15, true));
+//shapes.push(new Polygon(600, 300, [new Vector(-50, -200), new Vector(-50, 200), new Vector(50, 200), new Vector(50, -200)], 15, true));
+//shapes.push(new Polygon(400, 300, [new Vector(-10, -50), new Vector(-10, 50), new Vector(10, 50), new Vector(10, -50)], 15, true));
+createPolygon(231, 415, 5);
 createPolygon(50, 500, 3);
 createPolygon(300, 100, 4);
+createPolygon(500, 200, 6);
+createPolygon(200, 400, 7);
 
 main();
 
@@ -136,5 +142,11 @@ function updateSelectedShape() {
         selectedShape.rotVelocity = 0.01;
       default:
     }
+  }
+}
+
+function addImpulse() {
+  for (i in shapes) {
+    shapes[i].velocity = new Vector(Math.random() * 6 - 6, Math.random() * 6 - 6);
   }
 }

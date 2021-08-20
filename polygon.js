@@ -138,6 +138,80 @@ function createPolygon(x, y, sides, radius = 50, mass = 5, immovable = false) {
 
 //The following functions are used for the polygon collision calculations (separating axis theorem implementation)
 function checkColliding(a, b) {
+  let vertices = [];
+  let aVertices = a.getVertices();
+  let bVertices = b.getVertices();
+
+  vertices.push.apply(vertices, aVertices);
+  vertices.push.apply(vertices, bVertices);
+
+  let translationDistance = null;
+  let translationDirection = null;// = getPerpendicular(vertices[0], vertices[1]);
+  let translationObject = a;
+
+  for (let i = 0; i < vertices.length; i++) {
+    let perpendicular;
+    if (i == aVertices.length - 1) {
+      perpendicular = getPerpendicular(vertices[i], vertices[0]);
+    } else if (i == vertices.length - 1) {
+      perpendicular = getPerpendicular(vertices[i], vertices[aVertices.length]);
+    } else {
+      perpendicular = getPerpendicular(vertices[i], vertices[i + 1]);
+    }
+
+    let aProjection = projectVerticesOnAxis(perpendicular, aVertices);
+    let bProjection = projectVerticesOnAxis(perpendicular, bVertices);
+
+    var overlap = Math.min(aProjection.max, bProjection.max) - Math.max(aProjection.min, bProjection.min);
+    if (overlap < 0) {
+      return false;
+    }
+
+    //conditional for shapes colliding but no vertices from one shape are inside the other
+    if ((aProjection.max > bProjection.max && aProjection.min < bProjection.min) || (aProjection.max < bProjection.max && aProjection.min > bProjection.min)) {
+      let min = Math.abs(aProjection.min - bProjection.min);
+      let max = Math.abs(aProjection.max - bProjection.max);
+      if (min < max) {
+        overlap += min;
+      } else {
+        overlap += max;
+        perpendicular = perpendicular.multiply(-1);
+      }
+    }
+    //end containment
+
+    if (overlap < translationDistance || translationDistance === null) {
+      translationDistance = overlap;
+      translationDirection = perpendicular;
+      if (i < aVertices.length) {
+        translationObject = b;
+        if (aProjection.max > bProjection.max) {
+          translationDirection = translationDirection.multiply(-1);
+        }
+      } else {
+        translationObject = a;
+        if (aProjection.max < bProjection.max) {
+          translationDirection = translationDirection.multiply(-1);
+        }
+      }
+    }
+
+
+  }//end for loop
+
+  let overlappingVertex = projectVerticesOnAxis(translationDirection, translationObject.getVertices()).overlappingVertex;
+
+  if (translationObject == b) {
+    //may be the problem
+   //translationDirection = translationDirection.multiply(-1);
+  }
+
+  line(overlappingVertex.x, overlappingVertex.y, translationDirection.x * translationDistance + overlappingVertex.x, translationDirection.y * translationDistance + overlappingVertex.y);
+  circle(overlappingVertex.x, overlappingVertex.y, 3);
+  return true;
+}
+/*
+function checkColliding(a, b) {
   let aVertices = a.getVertices();
   let bVertices = b.getVertices();
 
@@ -226,12 +300,13 @@ function checkColliding(a, b) {
 
   if (translationObject == b) {
     //may be the problem
-    //translationDirection = translationDirection.multiply(-1);
+    translationDirection = translationDirection.multiply(-1);
   }
+  //overlapVector is not the correct size
   line(overlappingVertex.x, overlappingVertex.y, translationDirection.x * translationDistance + overlappingVertex.x, translationDirection.y * translationDistance + overlappingVertex.y);
   circle(overlappingVertex.x, overlappingVertex.y, 3);
 //for testing: don't resolve collisions
-  return;
+  return true;
 
   if (!b.immovable) {
     let overlapVector = translationDirection.multiply(translationDistance / (1 / a.mass + 1 / b.mass));
@@ -249,8 +324,6 @@ function checkColliding(a, b) {
   } else {
     let overlapVector = translationDirection.multiply(translationDistance);
     a.position = a.position.add(overlapVector);
-    console.log(overlapVector);
-    //need to figure out why overlapVector is too large sometimes
 
     let separatingVelocity = Vector.dot(a.velocity, translationDirection);
     let newSeparatingVelocity = -separatingVelocity * ELASTICITY;
@@ -260,6 +333,7 @@ function checkColliding(a, b) {
   }
   return true;
 }
+*/
 
 //helper functions for SAT collisions
 function getPerpendicular(a, b) {

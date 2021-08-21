@@ -6,12 +6,50 @@
     <link rel="stylesheet" href="style.css">
   </head>
   <body>
-    <h3>Click to select shape. Use WASD to apply impulse.</h3>
-    <canvas id="canvas" width="800" height="600"></canvas>
-    <script type="text/javascript" src="polygon.js"></script>
-    <script type="text/javascript" src="script.js"></script>
-    <div class="shape">
-      <button onclick="addImpulse()">Add Impulse</button>
+    <div class="flex-box">
+      <div>
+        <h3>Click to select shape. Use WASD to apply impulse.</h3>
+        <canvas id="canvas" width="800" height="600"></canvas>
+        <button onclick="addImpulse()">Add Impulse</button>
+      </div>
+
+      <script type="text/javascript" src="polygon.js"></script>
+      <script type="text/javascript" src="script.js"></script>
+
+      <div>
+        <p id="friction">Friction: 0.2</p>
+        <input id="frictionSlider" type="range" min="0" max="1" value="0.2" step="0.1" oninput="frictionChange(this.value)">
+
+        <p id="elasticity">Elasticity: 1.0</p>
+        <input id="elasticitySlider" type="range" min="0" max="1" value="1" step="0.1" oninput="elasticityChange(this.value)">
+
+        <p id="angularFriction">Angular Friction: 0.1</p>
+        <input id="angularFrictionSlider" type="range" min="0" max="1" value="0.5" step="0.1" oninput="angularFrictionChange(this.value)">
+
+        <p id="gravity">Gravity: (0, 0)</p>
+        <p>X</p>
+        <input id="gravityXSlider" type="range" min="-1" max="1" value="0" step="0.1" oninput="gravityXChange(this.value)">
+        <p>Y</p>
+        <input id="gravityYSlider" type="range" min="-1" max="1" value="0" step="0.1" oninput="gravityYChange(this.value)">
+      </div>
+
+      <div>
+        <h3>Selected Shape</h3>
+        <table>
+          <tr>
+            <th>Position: </th>
+            <td>(0, 0)</td>
+          </tr>
+          <tr>
+            <th>Velocity: </th>
+            <td>(0, 0)</td>
+          </tr>
+          <tr>
+            <th>Mass: </th>
+            <td>0.0</td>
+          </tr>
+        </table>
+      </div>
     </div>
   </body>
 </html>

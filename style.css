@@ -1,3 +1,27 @@
+* {
+    margin: 0px;
+    padding: 0px;
+}
+
 #canvas {
   border: 4px solid black;
+}
+
+.flex-box {
+  display: flex;
+}
+
+div {
+  margin: 20px;
+  padding: 20px;
+}
+
+th {
+  text-align: left;
+  font-weight: normal;
+}
+
+td {
+  text-align: right;
+  padding-left: 20px;
 }

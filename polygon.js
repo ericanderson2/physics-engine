@@ -24,14 +24,15 @@ class Polygon {
       this.momentOfInertia += Math.sqrt(points[i].distanceTo(this.position));
     }
     this.momentOfInertia *= this.mass;
-    //i do not think this is the right way to calculate moment of inertia
+    this.momentOfInertia = 20000;
+    //i do not think this is the right way to calculate moment of inertia lmao
   }
 
   draw() {
     //drawing the edges
-    if (this.colliding) {
+    if (this.colliding && show_debug_display) {
       ctx.strokeStyle = "red";
-    } else if (this.immovable) {
+    } else if (this.immovable && show_debug_display) {
       ctx.strokeStyle = "navy";
     } else {
       ctx.strokeStyle = "black";
@@ -45,17 +46,22 @@ class Polygon {
     ctx.closePath();
     ctx.stroke();
 
+    ctx.fillStyle = "gray";
+    ctx.fill();
+
     //drawing the origin
     if (this.selected) {
       ctx.strokeStyle = "blue";
     } else {
       ctx.strokeStyle = "black";
     }
-    ctx.beginPath();
-    ctx.arc(this.position.x, this.position.y, 7, 0, Math.PI * 2);
-    ctx.closePath();
 
-    ctx.stroke();
+    if (show_debug_display) {
+      ctx.beginPath();
+      ctx.arc(this.position.x, this.position.y, 7, 0, Math.PI * 2);
+      ctx.closePath();
+      ctx.stroke();
+    }
   }
 
   update() {
@@ -80,23 +86,31 @@ class Polygon {
     }
     //update the location of points. apply gravity and rotation
     if (this.velocity.x > 0) {
-      this.velocity.x -= FRICTION;
+      this.velocity.x -= friction;
       this.velocity.x = Math.max(0, this.velocity.x);
     } else {
-      this.velocity.x += FRICTION;
+      this.velocity.x += friction;
       this.velocity.x = Math.min(0, this.velocity.x);
     }
 
     if (this.velocity.y > 0) {
-      this.velocity.y -= FRICTION;
+      this.velocity.y -= friction;
       this.velocity.y = Math.max(0, this.velocity.y);
     } else {
-      this.velocity.y += FRICTION;
+      this.velocity.y += friction;
       this.velocity.y = Math.min(0, this.velocity.y);
     }
 
     this.velocity = this.velocity.add(gravity);
     this.position = this.position.add(this.velocity);
+
+    if (this.rotVelocity > 0) {
+      this.rotVelocity -= angular_friction;
+      this.rotVelocity = Math.max(0, this.rotVelocity);
+    } else {
+      this.rotVelocity += angular_friction;
+      this.rotVelocity = Math.min(0, this.rotVelocity);
+    }
 
     this.applyRotation();
   }
@@ -218,11 +232,14 @@ function checkColliding(a, b) {
     translationDirection = translationDirection.multiply(-1);
   }
 
-  line(overlappingVertex.x, overlappingVertex.y, translationDirection.x * translationDistance + overlappingVertex.x, translationDirection.y * translationDistance + overlappingVertex.y);
-  circle(overlappingVertex.x, overlappingVertex.y, 3);
-  if (!DO_COLLISION_RESOLUTION) {
+  if (show_debug_display) {
+    line(overlappingVertex.x, overlappingVertex.y, translationDirection.x * translationDistance + overlappingVertex.x, translationDirection.y * translationDistance + overlappingVertex.y);
+    circle(overlappingVertex.x, overlappingVertex.y, 3);
+  }
+
+  if (!do_collision_resolution) {
     return true;
-}
+  }
 
   //collision resolution
   if (!b.immovable) {
@@ -232,29 +249,36 @@ function checkColliding(a, b) {
 
     let relativeVelocity = new Vector(a.velocity.x - b.velocity.x, a.velocity.y - b.velocity.y);
     let separatingVelocity = Vector.dot(relativeVelocity, translationDirection);
-    let newSeparatingVelocity = -separatingVelocity * ELASTICITY;
+    let newSeparatingVelocity = -separatingVelocity * elasticity;
+
     let impulse = (newSeparatingVelocity - separatingVelocity) / (1 / a.mass + 1 / b.mass);
     let impulseVector = translationDirection.multiply(impulse);
 
     a.velocity = a.velocity.add(impulseVector.multiply(1 / a.mass));
     b.velocity = b.velocity.add(impulseVector.multiply(-1 / b.mass));
+
+    if (do_collision_rotation) {
+      a.rotVelocity += (1 / a.momentOfInertia) * Vector.cross(new Vector(overlappingVertex.x - a.position.x, overlappingVertex.y - a.position.y), impulseVector);
+      b.rotVelocity -= (1 / b.momentOfInertia) * Vector.cross(new Vector(overlappingVertex.x - b.position.x, overlappingVertex.y - b.position.y), impulseVector);
+    }
   } else {
     let overlapVector = translationDirection.multiply(translationDistance);
     a.position = a.position.add(overlapVector);
 
     let separatingVelocity = Vector.dot(a.velocity, translationDirection);
-    let newSeparatingVelocity = -separatingVelocity * ELASTICITY;
+    let newSeparatingVelocity = -separatingVelocity * elasticity;
+
     let impulse = (newSeparatingVelocity - separatingVelocity) / (1 / a.mass);
     let impulseVector = translationDirection.multiply(impulse);
+
     a.velocity = a.velocity.add(impulseVector.multiply(1 / a.mass));
+
+    if (do_collision_rotation) {
+      a.rotVelocity += (1 / a.momentOfInertia) * Vector.cross(new Vector(overlappingVertex.x - a.position.x, overlappingVertex.y - a.position.y), impulseVector);
+    }
   }
   return true;
 }
-
-
-
-
-
 
 //helper functions for SAT collisions
 
@@ -329,6 +353,10 @@ class Vector {
 
   static dot(a, b) {
     return a.x * b.x + a.y * b.y;
+  }
+
+  static cross(a, b) {
+    return a.x * b.y - a.y * b.x;
   }
 
   toString() {

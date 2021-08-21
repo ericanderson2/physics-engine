@@ -1,6 +1,10 @@
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
+document.addEventListener("mousedown", mouseDown);
+document.addEventListener("keydown", keyDown);
+document.addEventListener("keyup", keyUp);
+
 var friction = 0.002; //default: 0.02
 var angular_friction = 0.001;
 var movement = 5.0;  //default: 3
@@ -12,29 +16,14 @@ var gravity = new Vector(0, 0);
 
 var heldKeys = [];
 var shapes = [];
-var openPoints = [];
 var selectedShape = null;
-
-document.addEventListener("mousedown", mouseDown);
-document.addEventListener("keydown", keyDown);
-document.addEventListener("keyup", keyUp);
 
 ctx.lineWidth = 1;
 ctx.font = "16px Arial";
 
 var lastTime = new Date().getTime();
 
-//walls
-shapes.push(new Polygon(400, -10, [new Vector(-400, -50), new Vector(-400, 10), new Vector(400, 10), new Vector(400, -50)], 15, true));
-shapes.push(new Polygon(400, 610, [new Vector(-400, -10), new Vector(-400, 50), new Vector(400, 50), new Vector(400, -10)], 15, true));
-shapes.push(new Polygon(-10, 300, [new Vector(-50, -300), new Vector(-50, 300), new Vector(10, 300), new Vector(10, -300)], 15, true));
-shapes.push(new Polygon(810, 300, [new Vector(-10, -300), new Vector(-10, 300), new Vector(50, 300), new Vector(50, -300)], 15, true));
-
-createPolygon(231, 415, 5);
-createPolygon(50, 500, 3);
-createPolygon(300, 100, 4);
-createPolygon(500, 200, 6);
-createPolygon(200, 400, 7);
+resetSimulation();
 
 main();
 
@@ -46,6 +35,8 @@ function main() {
 }
 
 function draw() {
+  ctx.fillStyle = "WhiteSmoke";
+  ctx.fillRect(0, 0, 800, 600);
   let time = new Date().getTime();
   let fps = 1000 / (time - lastTime);
   lastTime = time;
@@ -62,14 +53,6 @@ function draw() {
 
   for (let i in shapes) {
     shapes[i].draw();
-  }
-
-  //show the currently clicked on points
-  for (let i in openPoints) {
-    ctx.strokeStyle = "black";
-    ctx.beginPath();
-    ctx.arc(openPoints[i].x, openPoints[i].y, 5, 0, Math.PI * 2);
-    ctx.stroke();
   }
 }
 
@@ -154,6 +137,42 @@ function addImpulse() {
   }
 }
 
+function resetSimulation() {
+  shapes = [];
+
+  shapes.push(new Polygon(400, -10, [new Vector(-400, -50), new Vector(-400, 10), new Vector(400, 10), new Vector(400, -50)], 15, true));
+  shapes.push(new Polygon(400, 610, [new Vector(-400, -10), new Vector(-400, 50), new Vector(400, 50), new Vector(400, -10)], 15, true));
+  shapes.push(new Polygon(-10, 300, [new Vector(-50, -300), new Vector(-50, 300), new Vector(10, 300), new Vector(10, -300)], 15, true));
+  shapes.push(new Polygon(810, 300, [new Vector(-10, -300), new Vector(-10, 300), new Vector(50, 300), new Vector(50, -300)], 15, true));
+
+  createPolygon(231, 415, 5);
+  createPolygon(50, 500, 3);
+  createPolygon(300, 100, 4);
+  createPolygon(500, 200, 6);
+  createPolygon(200, 400, 7);
+
+  friction = 0.002;
+  elasticity = 1.0;
+  angular_friction = 0.001
+  gravity = new Vector(0, 0);
+  show_debug_display = false
+  do_collision_resolution = true;
+  do_collision_rotation = true;
+
+  document.getElementById("friction").innerHTML = "Friction: " + (friction * 100);
+  document.getElementById("elasticity").innerHTML = "Elasticity: " + elasticity;
+  document.getElementById("angularFriction").innerHTML = "Angular Friction: " + (angular_friction * 100);
+  document.getElementById("gravity").innerHTML = "Gravity: (" + (gravity.x * 10) + ", " + (gravity.y * 10) + ")";
+  document.getElementById("collisionResolution").checked = true;
+  document.getElementById("collisionRotation").checked = true;
+
+  document.getElementById("frictionSlider").value = friction * 100;
+  document.getElementById("elasticitySlider").value = elasticity;
+  document.getElementById("angularFrictionSlider").value = angular_friction * 100;
+  document.getElementById("gravityXSlider").value = gravity.x * 10;
+  document.getElementById("gravityYSlider").value = gravity.y * 10;
+}
+
 function frictionChange(value) {
   friction = value / 100;
   document.getElementById("friction").innerHTML = "Friction: " + value;
@@ -177,4 +196,12 @@ function gravityXChange(value) {
 function gravityYChange(value) {
   gravity.y = value / 10;
   document.getElementById("gravity").innerHTML = "Gravity: (" + (gravity.x * 10) + ", " + value + ")";
+}
+
+function collisionResolutionChange(value) {
+  do_collision_resolution = value;
+}
+
+function collisionRotationChange(value) {
+  do_collision_rotation = value;
 }

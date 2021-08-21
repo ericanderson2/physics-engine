@@ -19,13 +19,8 @@ class Polygon {
     this.colliding = false;
     this.selected = false;
 
-    this.momentOfInertia = 0;
-    for (let i in points) {
-      this.momentOfInertia += Math.sqrt(points[i].distanceTo(this.position));
-    }
-    this.momentOfInertia *= this.mass;
+    //i apologize to my physics teacher
     this.momentOfInertia = 20000;
-    //i do not think this is the right way to calculate moment of inertia lmao
   }
 
   draw() {
@@ -46,16 +41,14 @@ class Polygon {
     ctx.closePath();
     ctx.stroke();
 
-    ctx.fillStyle = "gray";
+    if (this.selected) {
+      ctx.fillStyle = "DodgerBlue";
+    } else {
+      ctx.fillStyle = "silver";
+    }
     ctx.fill();
 
-    //drawing the origin
-    if (this.selected) {
-      ctx.strokeStyle = "blue";
-    } else {
-      ctx.strokeStyle = "black";
-    }
-
+    //shows the selection circle
     if (show_debug_display) {
       ctx.beginPath();
       ctx.arc(this.position.x, this.position.y, 7, 0, Math.PI * 2);
@@ -84,7 +77,8 @@ class Polygon {
       this.rotVelocity = 0.0;
       return;
     }
-    //update the location of points. apply gravity and rotation
+
+    //apply friction
     if (this.velocity.x > 0) {
       this.velocity.x -= friction;
       this.velocity.x = Math.max(0, this.velocity.x);
@@ -104,6 +98,7 @@ class Polygon {
     this.velocity = this.velocity.add(gravity);
     this.position = this.position.add(this.velocity);
 
+    //apply angular friction
     if (this.rotVelocity > 0) {
       this.rotVelocity -= angular_friction;
       this.rotVelocity = Math.max(0, this.rotVelocity);
@@ -112,11 +107,14 @@ class Polygon {
       this.rotVelocity = Math.min(0, this.rotVelocity);
     }
 
-    this.applyRotation();
+    if (do_collision_rotation) {
+      this.applyRotation();
+    }
   }
 
   //rotates each point in the shape by the rotational velocity
   applyRotation() {
+    //matrix math would be more efficient here. consider for optimzation
     if (this.rotVelocity != 0) {
       for (let i in this.points) {
         let newX = this.points[i].x * Math.cos(this.rotVelocity) - this.points[i].y * Math.sin(this.rotVelocity);
@@ -243,10 +241,12 @@ function checkColliding(a, b) {
 
   //collision resolution
   if (!b.immovable) {
+    //overlap resolution: move the shapes so that they no longer intersect
     let overlapVector = translationDirection.multiply(translationDistance / (1 / a.mass + 1 / b.mass));
     a.position = a.position.add(overlapVector.multiply(1 / a.mass));
     b.position = b.position.add(overlapVector.multiply(-1 / b.mass));
 
+    //velocity resolution: give the shapes new final velocities
     let relativeVelocity = new Vector(a.velocity.x - b.velocity.x, a.velocity.y - b.velocity.y);
     let separatingVelocity = Vector.dot(relativeVelocity, translationDirection);
     let newSeparatingVelocity = -separatingVelocity * elasticity;
@@ -258,10 +258,13 @@ function checkColliding(a, b) {
     b.velocity = b.velocity.add(impulseVector.multiply(-1 / b.mass));
 
     if (do_collision_rotation) {
+      //jank rotation code. to be improved the collision arms need to be calculated more accurately (and also the moment of Inertia)
+      //seems to mimic real rotational collision pretty well, but sometimes sends shapes spinning insanely fast
       a.rotVelocity += (1 / a.momentOfInertia) * Vector.cross(new Vector(overlappingVertex.x - a.position.x, overlappingVertex.y - a.position.y), impulseVector);
       b.rotVelocity -= (1 / b.momentOfInertia) * Vector.cross(new Vector(overlappingVertex.x - b.position.x, overlappingVertex.y - b.position.y), impulseVector);
     }
   } else {
+    //same as above, but adjusted for only one shape moving in response to the collision
     let overlapVector = translationDirection.multiply(translationDistance);
     a.position = a.position.add(overlapVector);
 
@@ -274,6 +277,7 @@ function checkColliding(a, b) {
     a.velocity = a.velocity.add(impulseVector.multiply(1 / a.mass));
 
     if (do_collision_rotation) {
+      //rotation code hasn't changed at all from above. if conservation of angular momentum is a thing, we're screwed
       a.rotVelocity += (1 / a.momentOfInertia) * Vector.cross(new Vector(overlappingVertex.x - a.position.x, overlappingVertex.y - a.position.y), impulseVector);
     }
   }

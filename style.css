@@ -1,19 +1,44 @@
 * {
     margin: 0px;
     padding: 0px;
+    background-color: LightGray;
+    color: DarkSlateGray;
+    font-size: 24px;
 }
 
 #canvas {
-  border: 4px solid black;
+  border: 4px solid DarkSlateGray;
 }
 
 .flex-box {
   display: flex;
 }
 
+.main-box {
+    border: 5px solid DarkSlateGray;
+}
+
+.footer {
+  margin: 0;
+  text-align: center;
+  margin-top: 200px;
+  background-color: DarkSlateGray;
+  color: LightGray;
+}
+
+.footer a {
+  background-color: DarkSlateGray;
+  color: LightGray;
+}
+
+.footer p {
+  background-color: DarkSlateGray;
+  color: LightGray;
+}
+
 div {
-  margin: 20px;
   padding: 20px;
+  margin-right: 20px;
 }
 
 th {
@@ -24,4 +49,9 @@ th {
 td {
   text-align: right;
   padding-left: 20px;
+}
+
+button {
+  padding: 15px;
+  background: DodgerBlue;
 }

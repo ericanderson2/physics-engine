@@ -107,6 +107,13 @@ class Polygon {
       this.rotVelocity = Math.min(0, this.rotVelocity);
     }
 
+    //temporary fix to collision rotation code bug
+    if (this.rotVelocity > 0.2) {
+      this.rotVelocity = 0.2;
+    } else if (this.rotVelocity < -0.2) {
+      this.rotVelocity = -0.2;
+    }
+
     if (do_collision_rotation) {
       this.applyRotation();
     }
@@ -144,7 +151,7 @@ function createPolygon(x, y, sides, radius = 50, mass = 5, immovable = false) {
     let angle = i * (2 * Math.PI / sides);
     vertices.push(new Vector(radius * Math.cos(angle), radius * Math.sin(angle)));
   }
-
+  console.log(new Polygon(x, y, vertices, mass, immovable));
   shapes.push(new Polygon(x, y, vertices, mass, immovable));
 }
 
@@ -315,6 +322,24 @@ function projectVerticesOnAxis(perpendicular, vertices) {
 //End of the SAT functions
 
 
+
+function polygonContainsPoint(shape, point) {
+  let vertices = shape.getVertices();
+  let j = vertices.length - 1;
+  let flag = false;
+
+  for (let i = 0; i < vertices.length; i++) {
+    if ((vertices[i].y < point.y && vertices[j].y >= point.y) || (vertices[i].y >= point.y && vertices[j].y < point.y)) {
+      if (vertices[i].x + (point.y - vertices[i].y) / (vertices[j].y - vertices[i].y) * (vertices[j].x - vertices[i].x) < point.x) {
+        flag = !flag;
+      }
+    }
+    j = i;
+  }
+
+  return flag;
+}
+
 //helper class to store any data point with an x and a y value
 class Vector {
   constructor(x, y) {
@@ -365,5 +390,11 @@ class Vector {
 
   toString() {
     return '(' + this.x + ', ' + this.y + ')';
+  }
+
+  roundedToString(places) {
+    let newX = Math.round(this.x * Math.pow(10, places)) / Math.pow(10, places);
+    let newY = Math.round(this.y * Math.pow(10, places)) / Math.pow(10, places);
+    return '(' + newX + ', ' + newY + ')';
   }
 }

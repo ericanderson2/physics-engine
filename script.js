@@ -7,12 +7,12 @@ document.addEventListener("keyup", keyUp);
 
 var friction = 0.002; //default: 0.02
 var angular_friction = 0.001;
-var movement = 5.0;  //default: 3
 var elasticity = 1.0; //default: 1
 var do_collision_resolution = true; //default: true
 var do_collision_rotation = true;
 var show_debug_display = false;
 var gravity = new Vector(0, 0);
+var impulse_multiplier = 8.0;
 
 var heldKeys = [];
 var shapes = [];
@@ -67,12 +67,22 @@ function mouseDown(e) {
   let rect = canvas.getBoundingClientRect()
   let mousePos = new Vector(e.clientX - rect.left, e.clientY - rect.top);
 
+  if (mousePos.x < 0 || mousePos.x > 800 || mousePos.y < 0 || mousePos.y > 600) {
+    return;
+  }
+
   for (let i in shapes) {
     shapes[i].selected = false;
-    if (shapes[i].position.distanceTo(mousePos) < 8) {
+  }
+
+  for (let i in shapes) {
+    if (polygonContainsPoint(shapes[i], mousePos)) {
       shapes[i].selected = true;
       selectedFlag = true;
       selectedShape = shapes[i];
+      document.getElementById("selectedShapeMass").innerHTML = selectedShape.mass;
+      document.getElementById("selectedShapeImmovable").innerHTML = selectedShape.immovable;
+      document.getElementById("selectedShapeSides").innerHTML = selectedShape.points.length;
       return;
     }
   }
@@ -113,27 +123,40 @@ function updateSelectedShape() {
   for (let i in heldKeys) {
     switch (heldKeys[i]) {
       case "w":
-        selectedShape.velocity.y = -movement;
+        selectedShape.velocity.y = -impulse_multiplier / 2;
         break;
       case "a":
-        selectedShape.velocity.x = -movement;
+        selectedShape.velocity.x = -impulse_multiplier / 2;
         break;
       case "s":
-        selectedShape.velocity.y = movement;
+        selectedShape.velocity.y = impulse_multiplier / 2;
         break;
       case "d":
-        selectedShape.velocity.x = movement;
+        selectedShape.velocity.x = impulse_multiplier / 2;
         break;
       case "r":
-        selectedShape.rotVelocity = 0.05;
+        selectedShape.rotVelocity = 0.15;
       default:
     }
   }
+  document.getElementById("selectedShapePos").innerHTML = selectedShape.position.roundedToString(0);
+  document.getElementById("selectedShapeVel").innerHTML = selectedShape.velocity.roundedToString(1);
+  document.getElementById("selectedShapeRot").innerHTML = Math.round(selectedShape.rotVelocity * 100) / 100;
+}
+
+function createShape() {
+  let x = document.getElementById("xPos").value;
+  let y = document.getElementById("yPos").value;
+  let sides = document.getElementById("sides").value;
+  let radius = document.getElementById("radius").value;
+  let mass = document.getElementById("mass").value;
+  let immovable = document.getElementById("immovable").checked;
+  createPolygon(x, y, sides, radius, mass, immovable);
 }
 
 function addImpulse() {
   for (i in shapes) {
-    shapes[i].velocity = new Vector(Math.random() * 6 - 6, Math.random() * 6 - 6);
+    shapes[i].velocity = new Vector(Math.random() * impulse_multiplier - impulse_multiplier, Math.random() * impulse_multiplier - impulse_multiplier);
   }
 }
 
@@ -155,6 +178,7 @@ function resetSimulation() {
   elasticity = 1.0;
   angular_friction = 0.001
   gravity = new Vector(0, 0);
+  impulse_multiplier = 8;
   show_debug_display = false
   do_collision_resolution = true;
   do_collision_rotation = true;
@@ -171,6 +195,7 @@ function resetSimulation() {
   document.getElementById("angularFrictionSlider").value = angular_friction * 100;
   document.getElementById("gravityXSlider").value = gravity.x * 10;
   document.getElementById("gravityYSlider").value = gravity.y * 10;
+  document.getElementById("impulseSlider").value = 8;
 }
 
 function frictionChange(value) {
@@ -204,4 +229,8 @@ function collisionResolutionChange(value) {
 
 function collisionRotationChange(value) {
   do_collision_rotation = value;
+}
+
+function impulseChange(value) {
+  impulse_multiplier = value;
 }

@@ -145,12 +145,19 @@ function updateSelectedShape() {
 }
 
 function createShape() {
-  let x = document.getElementById("xPos").value;
-  let y = document.getElementById("yPos").value;
-  let sides = document.getElementById("sides").value;
-  let radius = document.getElementById("radius").value;
-  let mass = document.getElementById("mass").value;
-  let immovable = document.getElementById("immovable").checked;
+  let x = Number(document.getElementById("xPos").value);
+  let y = Number(document.getElementById("yPos").value);
+  let sides = Math.abs(Number(document.getElementById("sides").value));
+  let radius = Math.abs(Number(document.getElementById("radius").value));
+  let mass = Math.max(Math.abs(Number(document.getElementById("mass").value)), 0.01);
+  let immovable = Boolean(document.getElementById("immovable").checked);
+
+//limit the shape to inside of the canvas window
+  x = Math.max(0 + radius, x);
+  x = Math.min(800 - radius, x);
+  y = Math.max(0 + radius, y);
+  y = Math.min(600 - radius, y);
+
   createPolygon(x, y, sides, radius, mass, immovable);
 }
 
@@ -168,11 +175,12 @@ function resetSimulation() {
   shapes.push(new Polygon(-10, 300, [new Vector(-50, -300), new Vector(-50, 300), new Vector(10, 300), new Vector(10, -300)], 15, true));
   shapes.push(new Polygon(810, 300, [new Vector(-10, -300), new Vector(-10, 300), new Vector(50, 300), new Vector(50, -300)], 15, true));
 
-  createPolygon(231, 415, 5);
+  createPolygon(600, 400, 5);
   createPolygon(50, 500, 3);
   createPolygon(300, 100, 4);
   createPolygon(500, 200, 6);
   createPolygon(200, 400, 7);
+  createPolygon(600, 220, 4, 50, 5, true);
 
   friction = 0.002;
   elasticity = 1.0;
@@ -196,6 +204,13 @@ function resetSimulation() {
   document.getElementById("gravityXSlider").value = gravity.x * 10;
   document.getElementById("gravityYSlider").value = gravity.y * 10;
   document.getElementById("impulseSlider").value = 8;
+
+  document.getElementById("xPos").value = 400;
+  document.getElementById("yPos").value = 300;
+  document.getElementById("sides").value = 4;
+  document.getElementById("radius").value = 50;
+  document.getElementById("mass").value = 5;
+  document.getElementById("immovable").checked = false;
 }
 
 function frictionChange(value) {

@@ -24,14 +24,7 @@ class Polygon {
   }
 
   draw() {
-    //drawing the edges
-    if (this.colliding && show_debug_display) {
-      ctx.strokeStyle = "red";
-    } else if (this.immovable && show_debug_display) {
-      ctx.strokeStyle = "navy";
-    } else {
-      ctx.strokeStyle = "black";
-    }
+    ctx.strokeStyle = "black";
 
     ctx.beginPath();
     ctx.moveTo(this.position.x + this.points[0].x, this.position.y + this.points[0].y);
@@ -43,6 +36,8 @@ class Polygon {
 
     if (this.selected) {
       ctx.fillStyle = "DodgerBlue";
+    } else if (this.immovable) {
+      ctx.fillStyle = "DimGray";
     } else {
       ctx.fillStyle = "silver";
     }
@@ -151,7 +146,7 @@ function createPolygon(x, y, sides, radius = 50, mass = 5, immovable = false) {
     let angle = i * (2 * Math.PI / sides);
     vertices.push(new Vector(radius * Math.cos(angle), radius * Math.sin(angle)));
   }
-  console.log(new Polygon(x, y, vertices, mass, immovable));
+
   shapes.push(new Polygon(x, y, vertices, mass, immovable));
 }
 

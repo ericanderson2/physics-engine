@@ -2,14 +2,14 @@
 <html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8">
-    <title>Physics Engine Test</title>
+    <title>Collision Engine</title>
     <link rel="stylesheet" href="style.css">
   </head>
   <body>
     <div id="flex-box">
       <div id="canvas-box">
         <canvas id="canvas" width="800" height="600"></canvas>
-        <h3>Click to select shape. Use WASD to apply impulse.</h3>
+        <p>Click on a shape to select. Click anywhere else on canvas to deselect. Use WASDR to apply impulses to the shape.</p>
       </div>
 
       <div id="settings-box">
@@ -43,7 +43,7 @@
       </div>
 
       <div id="shapes-box">
-        <div class="inner-shapes-box">
+        <div class="inner-shapes-box" id="box1">
           <h3>Selected Shape</h3>
           <br>
           <div id="selectedShapeTable" display="block">
@@ -78,8 +78,9 @@
             <p>No selected shape</p>
           </div>
         </div>
-        <div class="inner-shapes-box">
+        <div class="inner-shapes-box" id="box2">
           <h3>Add Shape</h3>
+          <br>
           <label for="xPos">X: </label>
           <input type="number" name="xPos" id="xPos" value="400">
           <br>
@@ -96,16 +97,19 @@
           <input type="number" name="mass" id="mass" value="5">
           <br>
           <label for="immovable">Immovable: </label>
-          <input type="checkbox" name="immovable" id="immovable" checked=true>
-          <br>
+          <input type="checkbox" name="immovable" id="immovable" checked=false>
+          <br><br>
           <button type="button" onclick="createShape()">Add Shape</button>
         </div>
-
+        </div>
       </div>
-    </div>
 
     <script type="text/javascript" src="polygon.js"></script>
     <script type="text/javascript" src="script.js"></script>
+
+    <div id="block-text">
+      <p>This is a 2D collision engine/modeling system made entirely with JavaScript, HTML, and CSS. No external libraries are used. Separating Axis Theorem is used to model the collisions between the shapes. Any convex polygon is supported.</p>
+    </div>
 
     <div class="footer">
       <p>Created by Eric Anderson</p>

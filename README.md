@@ -4,6 +4,8 @@ This is a 2D collision engine written entirely in JavaScript for the HTML canvas
 
 Separating Axis Theorem is used to implement the collision math.
 
+Test out the site here: https://ericanderson2.github.io/physics-engine/. Works best on latest version of Firefox. Set page zoom to around 70% to be able to see all the controls as well as the canvas.
+
 ## Features
 The engine supports any convex polygon. There are customizable settings for things like friction, elasticity, angular friction, mass, and gravity to model collisions in a variety of ways.
 

@@ -37,22 +37,18 @@ function main() {
 function draw() {
   ctx.fillStyle = "WhiteSmoke";
   ctx.fillRect(0, 0, 800, 600);
+
+  for (let i in shapes) {
+    shapes[i].draw();
+  }
+
+//draw FPS
   let time = new Date().getTime();
   let fps = 1000 / (time - lastTime);
   lastTime = time;
   if (show_debug_display) {
+    ctx.fillStyle = "black";
     ctx.fillText("FPS: " + Math.round(fps), 10, 20);
-    if (selectedShape != null) {
-      ctx.fillText("shape_x: " + Math.round(selectedShape.position.x), 10, 40);
-      ctx.fillText("shape_y: " + Math.round(selectedShape.position.y), 10, 60);
-      ctx.fillText("shape_velocity_x: " + Math.round(selectedShape.velocity.x), 10, 80);
-      ctx.fillText("shape_velocity_y: " + Math.round(selectedShape.velocity.y), 10, 100);
-      ctx.fillText("shape_mass: " + Math.round(selectedShape.mass), 10, 120);
-    }
-  }
-
-  for (let i in shapes) {
-    shapes[i].draw();
   }
 }
 
@@ -78,14 +74,17 @@ function mouseDown(e) {
   for (let i in shapes) {
     if (polygonContainsPoint(shapes[i], mousePos)) {
       shapes[i].selected = true;
-      selectedFlag = true;
       selectedShape = shapes[i];
       document.getElementById("selectedShapeMass").innerHTML = selectedShape.mass;
       document.getElementById("selectedShapeImmovable").innerHTML = selectedShape.immovable;
       document.getElementById("selectedShapeSides").innerHTML = selectedShape.points.length;
+      document.getElementById("noSelectedShape").style.display = "none";
+      document.getElementById("box1").style.display = "block";
       return;
     }
   }
+  document.getElementById("noSelectedShape").style.display = "block";
+  document.getElementById("box1").style.display = "none";
 }
 
 function keyDown(e) {
@@ -211,6 +210,10 @@ function resetSimulation() {
   document.getElementById("radius").value = 50;
   document.getElementById("mass").value = 5;
   document.getElementById("immovable").checked = false;
+
+  document.getElementById("noSelectedShape").style.display = "block";
+  document.getElementById("box1").style.display = "none";
+  selectedShape = null;
 }
 
 function frictionChange(value) {

@@ -1,8 +1,8 @@
 * {
     margin: 0px;
     padding: 0px;
-    background-color: LightGray;
-    color: DarkSlateGray;
+    background-color: WhiteSmoke;
+    color: black;
     font-size: 24px;
 }
 
@@ -34,10 +34,34 @@ td {
 button {
   padding: 15px;
   background: DodgerBlue;
+  color: WhiteSmoke;
 }
 
-#noSelectedShape {
-  display: none;
+html {
+  background-color: LightGray;
+}
+
+body {
+  background-color: LightGray;
+}
+
+body p {
+  background-color: LightGray;
+}
+
+label {
+  margin-right: 10px;
+}
+
+input {
+  background-color: LightGray;
+  padding: 0px;
+  padding-left: 10px;
+}
+
+input[type=checkbox] {
+    transform: scale(1.7);
+    margin-right: 20px;
 }
 
 #flex-box {
@@ -47,6 +71,8 @@ button {
   flex-direction: row;
   flex-wrap: wrap;
   margin: 40px;
+  background-color: LightGray;
+  box-sizing: border-box;
 }
 
 #canvas-box {
@@ -54,6 +80,18 @@ button {
   height: 700px;
   text-align: center;
   margin: 0px;
+  background-color: LightGray;
+}
+
+#canvas-description {
+  max-width: 800px;
+  margin: auto;
+}
+
+@media (max-width: 2000px) {
+  #canvas-box {
+    min-width: 2000px;
+  }
 }
 
 #settings-box {
@@ -63,8 +101,7 @@ button {
   max-width: 500px;
   width: 33%;
   min-height: 750px;
-  padding: 30px;
-  padding-top: 50px;
+  padding: 20px;
   justify-content: center;
   box-sizing: border-box;
   margin-left: 20px;
@@ -72,11 +109,15 @@ button {
   margin-bottom: 30px;
 }
 
+#settings-box p {
+  background-color: WhiteSmoke;
+}
+
 #shapes-box {
   display: flex;
   flex-direction: column;
   margin: 0px;
-  min-width: 400px;
+  min-width: 450px;
   max-width: 450px;
   min-height: 750px;
   width: 33%;
@@ -85,11 +126,13 @@ button {
   align-items: center;
   padding: 0px;
   margin-bottom: 30px;
+  background-color: LightGray;
 }
 
 .inner-shapes-box {
   border: 5px solid DarkSlateGray;
   box-sizing: border-box;
+  background-color: WhiteSmoke;
 }
 
 #box1 {
@@ -100,6 +143,23 @@ button {
   width: 100%;
   min-height: 300px;
   padding: 20px;
+  display: none;
+}
+
+#noSelectedShape {
+  margin: 0px;
+  align-self: flex-start;
+  box-sizing: border-box;
+  margin-bottom: auto;
+  width: 100%;
+  min-height: 300px;
+  text-align: center;
+  justify-content: center;
+  padding-top: 120px;
+}
+
+#noSelectedShape p {
+  background-color: WhiteSmoke;
 }
 
 #box2 {
@@ -113,10 +173,19 @@ button {
 
 #block-text {
     text-align: center;
+    justify-content: center;
     width: 80%;
     margin: auto;
     margin-top: 50px;
     margin-bottom: 100px;
+    box-sizing: border-box;
+}
+
+.centered {
+  text-align: center;
+  justify-content: center;
+  box-sizing: border-box;
+  margin: auto;
 }
 
 .footer {
@@ -131,9 +200,11 @@ button {
 .footer a {
   background-color: DarkSlateGray;
   color: LightGray;
+  font-size: 28px;
 }
 
 .footer p {
   background-color: DarkSlateGray;
   color: LightGray;
+  font-size: 28px;
 }

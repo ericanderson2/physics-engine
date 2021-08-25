@@ -9,10 +9,14 @@
     <div id="flex-box">
       <div id="canvas-box">
         <canvas id="canvas" width="800" height="600"></canvas>
+        <div id="canvas-description">
         <p>Click on a shape to select. Click anywhere else on canvas to deselect. Use WASDR to apply impulses to the shape.</p>
+        </div>
       </div>
 
       <div id="settings-box">
+        <h3>Settings</h3>
+        <br>
         <p id="friction">Friction: 0.2</p>
         <input id="frictionSlider" type="range" min="0" max="1" value="0.2" step="0.1" oninput="frictionChange(this.value)">
         <br><br>
@@ -38,8 +42,10 @@
         <label for="impulseSlider">Impulse</label>
         <input id="impulseSlider" name="impulseSlider" type="range" min="3" max="13" value="0" step="1" oninput="impulseChange(this.value)">
         <br><br>
-        <button type="button" onclick="addImpulse()">Add Impulse</button>
-        <button type="button" onclick="resetSimulation()">Reset Simulation</button>
+        <div class="centered">
+          <button type="button" onclick="addImpulse()" style="margin-right: 15px;">Add Impulse</button>
+          <button type="button" onclick="resetSimulation()">Reset Simulation</button>
+        </div>
       </div>
 
       <div id="shapes-box">
@@ -74,38 +80,47 @@
               </tr>
             </table>
           </div>
-          <div id="noSelectedShape">
-            <p>No selected shape</p>
-          </div>
+        </div>
+        <div class="inner-shapes-box" id="noSelectedShape">
+          <p>No selected shape</p>
         </div>
         <div class="inner-shapes-box" id="box2">
           <h3>Add Shape</h3>
           <br>
-          <label for="xPos">X: </label>
-          <input type="number" name="xPos" id="xPos" value="400">
-          <br>
-          <label for="yPos">Y: </label>
-          <input type="number" name="yPos" id="yPos" value="300">
-          <br>
-          <label for="sides">Sides: </label>
-          <input type="number" name="sides" id="sides" value="4">
-          <br>
-          <label for="radius">Radius: </label>
-          <input type="number" name="radius" id="radius" value="50">
-          <br>
-          <label for="mass">Mass: </label>
-          <input type="number" name="mass" id="mass" value="5">
-          <br>
-          <label for="immovable">Immovable: </label>
-          <input type="checkbox" name="immovable" id="immovable" checked=false>
+          <table>
+            <tr>
+              <th>X:</th>
+              <td><input type="number" name="xPos" id="xPos" value="400"></td>
+            </tr>
+            <tr>
+              <th>Y:</th>
+              <td><input type="number" name="yPos" id="yPos" value="300"></td>
+            </tr>
+            <tr>
+              <th>Sides:</th>
+              <td><input type="number" name="sides" id="sides" value="4"></td>
+            </tr>
+            <tr>
+              <th>Radius:</th>
+              <td><input type="number" name="radius" id="radius" value="50"></td>
+            </tr>
+            <tr>
+              <th>Mass:</th>
+              <td><input type="number" name="mass" id="mass" value="5"></td>
+            </tr>
+            <tr>
+              <th>Immovable:</th>
+              <td><input type="checkbox" name="immovable" id="immovable" checked=false></td>
+            </tr>
+          </table>
           <br><br>
-          <button type="button" onclick="createShape()">Add Shape</button>
+          <div class="centered">
+            <button type="button" onclick="createShape()">Add Shape</button>
+          </div>
         </div>
         </div>
-      </div>
+</div>
 
-    <script type="text/javascript" src="polygon.js"></script>
-    <script type="text/javascript" src="script.js"></script>
 
     <div id="block-text">
       <p>This is a 2D collision engine/modeling system made entirely with JavaScript, HTML, and CSS. No external libraries are used. Separating Axis Theorem is used to model the collisions between the shapes. Any convex polygon is supported.</p>
@@ -115,5 +130,9 @@
       <p>Created by Eric Anderson</p>
         <a href="https://github.com/ericanderson2/physics-engine" target="_blank">Github Repository</a>
     </div>
+
+    <script type="text/javascript" src="polygon.js"></script>
+    <script type="text/javascript" src="script.js"></script>
+
   </body>
 </html>

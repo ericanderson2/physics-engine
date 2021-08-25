@@ -39,6 +39,7 @@ All of the original goals have been reached. The following are things that could
 * Implement more realistic rotation
 * Fix issue with fast moving shapes phasing through each other
 * Allow for custom polygon creation through the interface
+* Make physics frame-independent to allow for use on lower-end machines
 
 ## MIT License
 Copyright © 2021 Eric Anderson

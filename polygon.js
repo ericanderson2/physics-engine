@@ -2,10 +2,10 @@ class Polygon {
   /*
     position (Vector) : the canvas coords of the shape's origin
     points (Array of Vector) : the vertices, relative to the position
-    immovable (Boolean) : whether the shape if affected by gravity or not
+    immovable (Boolean) : whether the shape can move or not
     velocity (Vector) : the amount the position is changed each AnimationFrame
     rotVelocity (float) : the amount the shape is rotated each AnimationFrame (in radians)
-    colliding (Boolean) : set each frame in update(), used for draw()
+    colliding (Boolean) : set each frame in update()
     selected (Boolean) : whether the user has clicked on the shape, used for draw()
   */
   constructor(x, y, points, mass = 5, immovable = false) {
@@ -23,6 +23,7 @@ class Polygon {
     this.momentOfInertia = 20000;
   }
 
+//display the shape
   draw() {
     ctx.strokeStyle = "black";
 
@@ -42,16 +43,9 @@ class Polygon {
       ctx.fillStyle = "silver";
     }
     ctx.fill();
-
-    //shows the selection circle
-    if (show_debug_display) {
-      ctx.beginPath();
-      ctx.arc(this.position.x, this.position.y, 7, 0, Math.PI * 2);
-      ctx.closePath();
-      ctx.stroke();
-    }
   }
 
+//apply physics logic and test for collisions
   update() {
     this.colliding = false;
 
@@ -102,7 +96,7 @@ class Polygon {
       this.rotVelocity = Math.min(0, this.rotVelocity);
     }
 
-    //temporary fix to collision rotation code bug
+    //'temporary' fix to collision rotation code bug
     if (this.rotVelocity > 0.2) {
       this.rotVelocity = 0.2;
     } else if (this.rotVelocity < -0.2) {
@@ -150,27 +144,17 @@ function createPolygon(x, y, sides, radius = 50, mass = 5, immovable = false) {
   shapes.push(new Polygon(x, y, vertices, mass, immovable));
 }
 
-//The following functions are used for the polygon collision calculations (separating axis theorem implementation)
+//Separating Axis Theorem implementation
 function checkColliding(a, b) {
   let vertices = [];
   let aVertices = a.getVertices();
   let bVertices = b.getVertices();
 
-/*  if (bVertices.length > aVertices.length) {
-    let tempVertices = aVertices;
-    aVertices = bVertices;
-    bVertices = tempVertices;
-
-    let tempShape = a;
-    a = b;
-    b = tempShape;
-  } */
-
   vertices.push.apply(vertices, aVertices);
   vertices.push.apply(vertices, bVertices);
 
   let translationDistance = null;
-  let translationDirection;// = getPerpendicular(vertices[0], vertices[1]);
+  let translationDirection;
   let translationObject;
 
   for (let i = 0; i < vertices.length; i++) {
@@ -195,7 +179,7 @@ function checkColliding(a, b) {
       return false;
     }
 
-    //shapes colliding but no vertices from one shape are inside the other
+    //shapes colliding but no vertices from one shape are inside the other (containment)
     if ((aProjection.max > bProjection.max && aProjection.min < bProjection.min) || (aProjection.max < bProjection.max && aProjection.min > bProjection.min)) {
       let min = Math.abs(aProjection.min - bProjection.min);
       let max = Math.abs(aProjection.max - bProjection.max);
@@ -206,8 +190,8 @@ function checkColliding(a, b) {
         perpendicular = perpendicular.multiply(-1);
       }
     }
-    //end containment
 
+//check to see if the distance to translate for this perpendicular is more efficient than another perpendicular
     if (overlap < translationDistance || translationDistance === null) {
       translationDistance = overlap;
       translationDirection = perpendicular;
@@ -224,7 +208,8 @@ function checkColliding(a, b) {
       }
     }
 
-  }//end for loop
+  }
+  //end for loop
 
   let overlappingVertex = projectVerticesOnAxis(translationDirection, translationObject.getVertices()).overlappingVertex;
 
@@ -233,6 +218,7 @@ function checkColliding(a, b) {
   }
 
   if (show_debug_display) {
+    //draw shape overlap and overlapping vertex
     line(overlappingVertex.x, overlappingVertex.y, translationDirection.x * translationDistance + overlappingVertex.x, translationDirection.y * translationDistance + overlappingVertex.y);
     circle(overlappingVertex.x, overlappingVertex.y, 3);
   }
@@ -316,8 +302,7 @@ function projectVerticesOnAxis(perpendicular, vertices) {
 }
 //End of the SAT functions
 
-
-
+//return true if a shape contains a point. used for the shape selection
 function polygonContainsPoint(shape, point) {
   let vertices = shape.getVertices();
   let j = vertices.length - 1;

@@ -5,12 +5,13 @@
     <title>Collision Engine</title>
     <link rel="stylesheet" href="style.css">
   </head>
+
   <body>
     <div id="flex-box">
       <div id="canvas-box">
         <canvas id="canvas" width="800" height="600"></canvas>
         <div id="canvas-description">
-        <p>Click on a shape to select. Click anywhere else on canvas to deselect. Use WASDR to apply impulses to the shape.</p>
+          <p>Click on a shape to select. Click anywhere else on canvas to deselect. Use WASDR to apply impulses to the shape. Zoom out to see settings better.</p>
         </div>
       </div>
 
@@ -81,9 +82,11 @@
             </table>
           </div>
         </div>
+
         <div class="inner-shapes-box" id="noSelectedShape">
           <p>No selected shape</p>
         </div>
+
         <div class="inner-shapes-box" id="box2">
           <h3>Add Shape</h3>
           <br>
@@ -118,9 +121,8 @@
             <button type="button" onclick="createShape()">Add Shape</button>
           </div>
         </div>
-        </div>
-</div>
-
+      </div>
+    </div>
 
     <div id="block-text">
       <p>This is a 2D collision engine/modeling system made entirely with JavaScript, HTML, and CSS. No external libraries are used. Separating Axis Theorem is used to model the collisions between the shapes. Any convex polygon is supported.</p>
@@ -128,7 +130,7 @@
 
     <div class="footer">
       <p>Created by Eric Anderson</p>
-        <a href="https://github.com/ericanderson2/physics-engine" target="_blank">Github Repository</a>
+      <a href="https://github.com/ericanderson2/physics-engine" target="_blank">Github Repository</a>
     </div>
 
     <script type="text/javascript" src="polygon.js"></script>

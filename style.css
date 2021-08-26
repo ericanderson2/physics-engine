@@ -57,11 +57,16 @@ input {
   background-color: LightGray;
   padding: 0px;
   padding-left: 10px;
+  margin-left: 30px; 
 }
 
 input[type=checkbox] {
     transform: scale(1.7);
-    margin-right: 20px;
+    margin-right: 15px;
+}
+
+input[type=number] {
+  max-width: 200px;
 }
 
 #flex-box {
